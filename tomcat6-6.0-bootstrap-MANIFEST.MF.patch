@@ -1,0 +1,8 @@
+--- apache-tomcat-6.0.16-src/res/bootstrap.jar.manifest.orig	2007-06-21 11:02:18.000000000 -0400
++++ apache-tomcat-6.0.16-src/res/bootstrap.jar.manifest	2007-06-21 11:02:26.000000000 -0400
+@@ -1,5 +1,4 @@
+ Manifest-Version: 1.0
+ Main-Class: org.apache.catalina.startup.Bootstrap
+-Class-Path: commons-daemon.jar commons-logging-api.jar tomcat-juli.jar tomcat-coyote.jar
+ Specification-Title: Catalina
+ Specification-Version: 6.0
