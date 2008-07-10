@@ -51,7 +51,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{macro_version}
-Release: 1jpp.7%{?dist}
+Release: 1.8%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -86,9 +86,10 @@ Requires: jakarta-commons-logging
 Requires: java >= 0:1.6.0
 Requires: procps
 Requires: %{name}-lib = %{epoch}:%{version}-%{release}
-Requires(post): /sbin/chkconfig
-Requires(preun): /sbin/chkconfig
-Requires(preun): /sbin/service
+Requires(post): chkconfig
+Requires(preun): chkconfig
+# for /sbin/service
+Requires(preun): initscripts
 
 %description
 Tomcat is the servlet container that is used in the official Reference
@@ -433,6 +434,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Thu Jul 10 2008 Tom "spot" Callaway <tcallawa@redhat.com> - 0:6.0.16-1.8
+- drop repotag
+
 * Fri Apr 04 2008 David Walluck <dwalluck@redhat.com> 0:6.0.16-1jpp.7.fc9
 - version jsp and servlet Provides with their spec versions
 - remove Obsoletes/Provides for servletapi6 package as it can co-exist
