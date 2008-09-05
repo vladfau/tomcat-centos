@@ -31,9 +31,9 @@
 %define section free
 
 %define jspspec 2.1
-%define macro_version 16
 %define major_version 6
 %define minor_version 0
+%define micro_version 18
 %define packdname apache-tomcat-%{version}-src
 %define servletspec 2.5
 %define tcuid 91
@@ -45,13 +45,13 @@
 %define homedir %{_datadir}/%{name}
 %define libdir %{_javadir}/%{name}
 %define logdir %{_var}/log/%{name}
-%define tempdir %{_var}/tmp/%{name}
-%define workdir %{_var}/cache/%{name}
+%define tempdir %{_var}/cache/%{name}/temp
+%define workdir %{_var}/cache/%{name}/work
 
 Name: tomcat6
 Epoch: 0
-Version: %{major_version}.%{minor_version}.%{macro_version}
-Release: 1.8%{?dist}
+Version: %{major_version}.%{minor_version}.%{micro_version}
+Release: 1.1%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -72,18 +72,18 @@ BuildArch: noarch
 
 BuildRequires: ant
 BuildRequires: ant-trax
-BuildRequires: eclipse-ecj >= 0:3.2.2
+BuildRequires: ecj
 BuildRequires: findutils
 BuildRequires: jakarta-commons-collections
 BuildRequires: jakarta-commons-daemon
-BuildRequires: java-devel >= 0:1.6.0
+BuildRequires: java-1.6.0-devel
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
 Requires(pre): shadow-utils
 Requires(pre): shadow-utils
 Requires: jakarta-commons-daemon
 Requires: jakarta-commons-logging
-Requires: java >= 0:1.6.0
+Requires: java-1.6.0
 Requires: procps
 Requires: %{name}-lib = %{epoch}:%{version}-%{release}
 Requires(post): chkconfig
@@ -107,7 +107,7 @@ Summary: The host-manager and manager web applications for Apache Tomcat
 Requires: %{name} = %{epoch}:%{version}-%{release}
 
 %description admin-webapps
-The host-manager and manager web applications for Apache Tomcat
+The host-manager and manager web applications for Apache Tomcat.
 
 %package docs-webapp
 Group: System Environment/Applications
@@ -115,14 +115,14 @@ Summary: The docs web application for Apache Tomcat
 Requires: %{name} = %{epoch}:%{version}-%{release}
 
 %description docs-webapp
-The docs web application for Apache Tomcat
+The docs web application for Apache Tomcat.
 
 %package javadoc
 Group: Documentation
 Summary: Javadoc generated documentation for Apache Tomcat
 
 %description javadoc
-Javadoc generated documentation for Apache Tomcat
+Javadoc generated documentation for Apache Tomcat.
 
 %package jsp-%{jspspec}-api
 Group: Internet/WWW/Dynamic Content
@@ -134,21 +134,21 @@ Requires(post): chkconfig
 Requires(postun): chkconfig
 
 %description jsp-%{jspspec}-api
-Apache Tomcat JSP API implementation classes
+Apache Tomcat JSP API implementation classes.
 
 %package lib
 Group: Development/Compilers
 Summary: Libraries needed to run the Tomcat Web container
 Requires: %{name}-jsp-%{jspspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
-Requires(post): eclipse-ecj >= 0:3.2.2
+Requires(post): ecj
 Requires(post): jakarta-commons-collections-tomcat5
 Requires(post): jakarta-commons-dbcp-tomcat5
 Requires(post): jakarta-commons-pool-tomcat5
 Requires(preun): coreutils
 
 %description lib
-Libraries needed to run the Tomcat Web container
+Libraries needed to run the Tomcat Web container.
 
 %package servlet-%{servletspec}-api
 Group: Internet/WWW/Dynamic Content
@@ -160,7 +160,7 @@ Requires(post): chkconfig
 Requires(postun): chkconfig
 
 %description servlet-%{servletspec}-api
-Apache Tomcat Servlet API implementation classes
+Apache Tomcat Servlet API implementation classes.
 
 %package webapps
 Group: System Environment/Applications
@@ -169,15 +169,17 @@ Requires: %{name} = %{epoch}:%{version}-%{release}
 Requires(post): jakarta-taglibs-standard >= 0:1.1
 
 %description webapps
-The ROOT and examples web applications for Apache Tomcat
+The ROOT and examples web applications for Apache Tomcat.
 
 %prep
 %setup -q -c -T -a 0
 # remove pre-built binaries and windows files
-find . \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "*.gz" -o \
-          -name "*.jar" -o -name "*.war" -o -name "*.zip" \) | xargs -t %{__rm} -f
+find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "*.gz" -o \
+          -name "*.jar" -o -name "*.war" -o -name "*.zip" \) | xargs -t %{__rm}
+pushd %{packdname}
 %patch0 -p0
 %patch1 -p0
+popd
 
 %build
 export CLASSPATH=
@@ -193,19 +195,19 @@ pushd %{packdname}
         -Dcommons-collections.jar="$(build-classpath commons-collections)" \
         -Dcommons-daemon.jar="$(build-classpath commons-daemon)" \
         -Dcommons-daemon.jsvc.tar.gz="HACK" \
-        -Djasper-jdt.jar="$(build-classpath eclipse-ecj)" \
-        -Djdt.jar="$(build-classpath eclipse-ecj)" \
+        -Djasper-jdt.jar="$(build-classpath ecj)" \
+        -Djdt.jar="$(build-classpath ecj)" \
         -Dtomcat-dbcp.jar="HACK" \
         -Dtomcat-native.tar.gz="HACK" \
         -Dversion="%{version}" \
-        -Dversion.build="%{macro_version}"
+        -Dversion.build="%{micro_version}"
     # javadoc generation
     %{ant} -f dist.xml dist-prepare
     %{ant} -f dist.xml dist-source
     %{ant} -f dist.xml dist-javadoc
     # remove some jars that we'll replace with symlinks later
     %{__rm} output/build/bin/commons-daemon.jar \
-            output/build/lib/eclipse-ecj.jar
+            output/build/lib/ecj.jar
     # remove the cruft we created
     %{__rm} output/build/bin/HACK \
             output/build/bin/tomcat-native.tar.gz \
@@ -244,8 +246,6 @@ pushd %{packdname}/output/build
     %{__cp} -a lib/*.jar ${RPM_BUILD_ROOT}%{libdir}
     %{__cp} -a webapps/* ${RPM_BUILD_ROOT}%{appdir}
 popd
-# remove admin webapp directory since it is not shipped and not available
-%{__rm} -r ${RPM_BUILD_ROOT}%{appdir}/ROOT/admin
 # javadoc
 pushd %{packdname}/output/dist/webapps
     %{__cp} -a docs/api/* ${RPM_BUILD_ROOT}%{_javadocdir}/%{name}
@@ -338,7 +338,7 @@ popd
 
 %post lib
 %{_bindir}/build-jar-repository %{libdir} commons-collections-tomcat5 \
-    commons-dbcp-tomcat5 commons-pool-tomcat5 eclipse-ecj 2>&1
+    commons-dbcp-tomcat5 commons-pool-tomcat5 ecj 2>&1
 
 %post servlet-%{servletspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/servlet.jar servlet \
@@ -361,7 +361,7 @@ if [ "$1" = "0" ]; then
     %{__rm} -f %{libdir}/\[commons-collections-tomcat5\].jar \
         %{libdir}/\[commons-dbcp-tomcat5\].jar \
         %{libdir}/\[commons-pool-tomcat5\].jar \
-        %{libdir}/\[eclipse-ecj\].jar >/dev/null 2>&1
+        %{libdir}/\[ecj\].jar >/dev/null 2>&1
 fi
 
 %postun jsp-%{jspspec}-api
@@ -434,6 +434,14 @@ fi
 %{appdir}/sample
 
 %changelog
+* Tue Aug 26 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-1.1
+- 6.0.18
+- Resolves: CVE-2008-1232, CVE-2008-1947, CVE-2008-2370, CVE-2008-2938
+- fix definition of java.security.policy with d%%{name} start-security
+- don't pass $CATALINA_OPTS with d%%{name} stop
+- redefine tempdir and workdir for tmpwatch workaround
+- change eclipse-ecj references to ecj
+
 * Thu Jul 10 2008 Tom "spot" Callaway <tcallawa@redhat.com> - 0:6.0.16-1.8
 - drop repotag
 

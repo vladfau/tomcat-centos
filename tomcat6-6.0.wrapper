@@ -48,7 +48,7 @@ elif [ "$1" = "start-security" ]; then
     -Djava.endorsed.dirs="$JAVA_ENDORSED_DIRS" \
     -Djava.io.tmpdir="$CATALINA_TMPDIR" \
     -Djava.security.manager \
-    -Djava.security.policy="${CATALINA_BASE}/conf/catalina.policy" \
+    -Djava.security.policy=="${CATALINA_BASE}/conf/catalina.policy" \
     -Djava.util.logging.config.file="${CATALINA_BASE}/conf/logging.properties" \
     -Djava.util.logging.manager="org.apache.juli.ClassLoaderLogManager" \
     org.apache.catalina.startup.Bootstrap start \
@@ -57,7 +57,7 @@ elif [ "$1" = "start-security" ]; then
       echo $! > $CATALINA_PID
     fi
 elif [ "$1" = "stop" ]; then
-  ${JAVACMD} $JAVA_OPTS $CATALINA_OPTS \
+  ${JAVACMD} $JAVA_OPTS \
     -classpath "$CLASSPATH" \
     -Dcatalina.base="$CATALINA_BASE" \
     -Dcatalina.home="$CATALINA_HOME" \
