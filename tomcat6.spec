@@ -47,11 +47,12 @@
 %define logdir %{_var}/log/%{name}
 %define tempdir %{_var}/cache/%{name}/temp
 %define workdir %{_var}/cache/%{name}/work
+%define _initrddir %{_sysconfdir}/init.d
 
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 1.1%{?dist}
+Release: 6.1%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -76,20 +77,20 @@ BuildRequires: ecj
 BuildRequires: findutils
 BuildRequires: jakarta-commons-collections
 BuildRequires: jakarta-commons-daemon
-BuildRequires: java-1.6.0-devel
+BuildRequires: java-devel
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
 Requires(pre): shadow-utils
 Requires(pre): shadow-utils
 Requires: jakarta-commons-daemon
 Requires: jakarta-commons-logging
-Requires: java-1.6.0
+Requires: java
 Requires: procps
 Requires: %{name}-lib = %{epoch}:%{version}-%{release}
-Requires(post): chkconfig
-Requires(preun): chkconfig
-# for /sbin/service
-Requires(preun): initscripts
+Requires(post): /sbin/chkconfig
+Requires(preun): /sbin/chkconfig
+Requires(post): /lib/lsb/init-functions
+Requires(preun): /lib/lsb/init-functions
 
 %description
 Tomcat is the servlet container that is used in the official Reference
@@ -130,8 +131,6 @@ Summary: Apache Tomcat JSP API implementation classes
 Provides: jsp = %{jspspec}
 Provides: jsp21
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
-Requires(post): chkconfig
-Requires(postun): chkconfig
 
 %description jsp-%{jspspec}-api
 Apache Tomcat JSP API implementation classes.
@@ -142,6 +141,7 @@ Summary: Libraries needed to run the Tomcat Web container
 Requires: %{name}-jsp-%{jspspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
 Requires(post): ecj
+Requires(post): %{_javadir}/ecj.jar
 Requires(post): jakarta-commons-collections-tomcat5
 Requires(post): jakarta-commons-dbcp-tomcat5
 Requires(post): jakarta-commons-pool-tomcat5
@@ -156,8 +156,6 @@ Summary: Apache Tomcat Servlet API implementation classes
 Provides: servlet = %{servletspec}
 Provides: servlet6
 Provides: servlet25
-Requires(post): chkconfig
-Requires(postun): chkconfig
 
 %description servlet-%{servletspec}-api
 Apache Tomcat Servlet API implementation classes.
@@ -352,7 +350,7 @@ popd
 # clean tempdir and workdir on removal or upgrade
 %{__rm} -rf %{workdir}/* %{tempdir}/*
 if [ "$1" = "0" ]; then
-    /sbin/service %{name} stop >/dev/null 2>&1
+    %{_initrddir}/%{name} stop >/dev/null 2>&1
     /sbin/chkconfig --del %{name}
 fi
 
@@ -434,7 +432,27 @@ fi
 %{appdir}/sample
 
 %changelog
-* Tue Aug 26 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-1.1
+* Tue Oct 07 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-6.1
+- use lsb_release instead of lsb-release to get the distributor
+
+* Tue Oct 07 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-5
+- fix initscript messages on Mandriva Linux
+- fix help message in initscript
+
+* Wed Oct 01 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-4
+- redefine %%_initrddir for FHS-compliance
+- make initscript LSB-complaint
+
+* Fri Sep 26 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-3
+- fix status in initscript
+
+* Thu Sep 25 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-2
+- remove initscripts and /sbin/service requirement
+- call initscript directly without using /sbin/service
+- require /sbin/chkconfig instead of chkconfig
+- remove chkconfig requirement from packages that don't require it
+
+* Tue Aug 26 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-1
 - 6.0.18
 - Resolves: CVE-2008-1232, CVE-2008-1947, CVE-2008-2370, CVE-2008-2938
 - fix definition of java.security.policy with d%%{name} start-security
