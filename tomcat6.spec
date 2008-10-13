@@ -52,7 +52,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 6.1%{?dist}
+Release: 6.2%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -77,14 +77,14 @@ BuildRequires: ecj
 BuildRequires: findutils
 BuildRequires: jakarta-commons-collections
 BuildRequires: jakarta-commons-daemon
-BuildRequires: java-devel
+BuildRequires: java-1.6.0-devel
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
 Requires(pre): shadow-utils
 Requires(pre): shadow-utils
 Requires: jakarta-commons-daemon
 Requires: jakarta-commons-logging
-Requires: java
+Requires: java-1.6.0
 Requires: procps
 Requires: %{name}-lib = %{epoch}:%{version}-%{release}
 Requires(post): /sbin/chkconfig
@@ -432,6 +432,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Mon Oct 13 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-6.2
+- use Fedora-specific changes to force java 1.6.0
+
 * Tue Oct 07 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-6.1
 - use lsb_release instead of lsb-release to get the distributor
 
