@@ -39,20 +39,22 @@
 %define tcuid 91
 
 # FHS 2.3 compliant tree structure - http://www.pathname.com/fhs/2.3/
-%define appdir %{_var}/lib/%{name}/webapps
+%define basedir %{_var}/lib/%{name}
+%define appdir %{basedir}/webapps
 %define bindir %{_datadir}/%{name}/bin
 %define confdir %{_sysconfdir}/%{name}
 %define homedir %{_datadir}/%{name}
 %define libdir %{_javadir}/%{name}
 %define logdir %{_var}/log/%{name}
-%define tempdir %{_var}/cache/%{name}/temp
-%define workdir %{_var}/cache/%{name}/work
+%define cachedir %{_var}/cache/%{name}
+%define tempdir %{cachedir}/temp
+%define workdir %{cachedir}/work
 %define _initrddir %{_sysconfdir}/init.d
 
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 6.2%{?dist}
+Release: 8.1%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -131,6 +133,8 @@ Summary: Apache Tomcat JSP API implementation classes
 Provides: jsp = %{jspspec}
 Provides: jsp21
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
+Requires(post): %{_sbindir}/update-alternatives
+Requires(postun): %{_sbindir}/update-alternatives
 
 %description jsp-%{jspspec}-api
 Apache Tomcat JSP API implementation classes.
@@ -156,6 +160,8 @@ Summary: Apache Tomcat Servlet API implementation classes
 Provides: servlet = %{servletspec}
 Provides: servlet6
 Provides: servlet25
+Requires(post): %{_sbindir}/update-alternatives
+Requires(postun): %{_sbindir}/update-alternatives
 
 %description servlet-%{servletspec}-api
 Apache Tomcat Servlet API implementation classes.
@@ -385,6 +391,7 @@ fi
 %attr(0755,root,root) %{_initrddir}/%{name}
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
+%dir %{basedir}
 %attr(0775,root,tomcat) %dir %{appdir}
 %dir %{confdir}
 %dir %{confdir}/Catalina
@@ -396,6 +403,7 @@ fi
 %config(noreplace) %{confdir}/server.xml
 %attr(0660,root,tomcat) %config(noreplace) %{confdir}/tomcat-users.xml
 %config(noreplace) %{confdir}/web.xml
+%attr(0775,root,tomcat) %dir %{cachedir}
 %attr(0775,root,tomcat) %dir %{tempdir}
 %attr(0775,root,tomcat) %dir %{workdir}
 %{homedir}
@@ -432,10 +440,16 @@ fi
 %{appdir}/sample
 
 %changelog
-* Mon Oct 13 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-6.2
-- use Fedora-specific changes to force java 1.6.0
+* Tue Dec 02 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-8.1
+- build for Fedora
 
-* Tue Oct 07 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-6.1
+* Tue Dec 02 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-8
+- fix directory ownership
+
+* Thu Nov 13 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-7
+- add Requires for update-alternatives
+
+* Tue Oct 07 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-6
 - use lsb_release instead of lsb-release to get the distributor
 
 * Tue Oct 07 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-5
