@@ -54,7 +54,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 9.1%{?dist}
+Release: 9.2%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -68,6 +68,7 @@ Source4: %{name}-%{major_version}.%{minor_version}.wrapper
 Source5: %{name}-%{major_version}.%{minor_version}.logrotate
 Source6: %{name}-%{major_version}.%{minor_version}-digest.script
 Source7: %{name}-%{major_version}.%{minor_version}-tool-wrapper.script
+Source8: servlet-api-OSGi-MANIFEST.MF
 Patch0: %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1: %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
@@ -224,6 +225,12 @@ pushd ../web
 %{jar} cf ../../../../../../../../output/build/webapps/docs/appdev/sample/sample.war *
 popd
 popd
+
+# inject OSGi manifests
+mkdir -p META-INF
+cp -p %{SOURCE8} META-INF/MANIFEST.MF
+touch META-INF/MANIFEST.MF
+zip -u %{packdname}/output/build/lib/servlet-api.jar META-INF/MANIFEST.MF
 
 %install
 %{__rm} -rf $RPM_BUILD_ROOT
@@ -440,6 +447,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Wed Apr 1 2009 akurtakov <akurtakov@dhcp-lab-180.englab.brq.redhat.com> 0:6.0.18-9.2
+- Add OSGi manifest for servlet-api.
+
 * Wed Feb 25 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:6.0.18-9.1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_11_Mass_Rebuild
 
