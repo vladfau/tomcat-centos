@@ -54,7 +54,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 9.2%{?dist}
+Release: 10.2%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -447,6 +447,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Sun Jul 26 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:6.0.18-10.2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
+
 * Wed Apr 1 2009 akurtakov <akurtakov@dhcp-lab-180.englab.brq.redhat.com> 0:6.0.18-9.2
 - Add OSGi manifest for servlet-api.
 
