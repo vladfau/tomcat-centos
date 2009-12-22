@@ -54,7 +54,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -146,7 +146,6 @@ Summary: Libraries needed to run the Tomcat Web container
 Requires: %{name}-jsp-%{jspspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
 Requires(post): ecj
-Requires(post): %{_javadir}/ecj.jar
 Requires(post): jakarta-commons-collections-tomcat5
 Requires(post): jakarta-commons-dbcp-tomcat5
 Requires(post): jakarta-commons-pool-tomcat5
@@ -447,6 +446,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Tue Dec 22 2009 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.20-2
+- Drop file requires on /usr/share/java/ecj.jar.
+
 * Mon Nov 9 2009 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.20-1
 - Update to 6.0.20. Fixes CVE-2009-0033,CVE-2009-0580. 
 
