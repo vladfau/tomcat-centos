@@ -1,8 +1,9 @@
---- res/bootstrap.jar.manifest.orig	2007-06-21 11:02:18.000000000 -0400
-+++ res/bootstrap.jar.manifest	2007-06-21 11:02:26.000000000 -0400
+--- res/META-INF/bootstrap.jar.manifest.orig	2010-01-19 15:43:41.000000000 +0200
++++ res/META-INF/bootstrap.jar.manifest	2010-03-01 12:42:57.993559599 +0200
 @@ -1,5 +1,4 @@
  Manifest-Version: 1.0
  Main-Class: org.apache.catalina.startup.Bootstrap
--Class-Path: commons-daemon.jar tomcat-juli.jar tomcat-coyote.jar
+-Class-Path: commons-daemon.jar tomcat-juli.jar
  Specification-Title: Catalina
  Specification-Version: 6.0
+\ No newline at end of file

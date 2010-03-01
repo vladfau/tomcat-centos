@@ -33,7 +33,7 @@
 %define jspspec 2.1
 %define major_version 6
 %define minor_version 0
-%define micro_version 20
+%define micro_version 24
 %define packdname apache-tomcat-%{version}-src
 %define servletspec 2.5
 %define tcuid 91
@@ -54,7 +54,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 2%{?dist}
+Release: 1%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -69,6 +69,7 @@ Source5: %{name}-%{major_version}.%{minor_version}.logrotate
 Source6: %{name}-%{major_version}.%{minor_version}-digest.script
 Source7: %{name}-%{major_version}.%{minor_version}-tool-wrapper.script
 Source8: servlet-api-OSGi-MANIFEST.MF
+Source9: jsp-api-OSGi-MANIFEST.MF
 Patch0: %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1: %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
@@ -230,6 +231,9 @@ mkdir -p META-INF
 cp -p %{SOURCE8} META-INF/MANIFEST.MF
 touch META-INF/MANIFEST.MF
 zip -u %{packdname}/output/build/lib/servlet-api.jar META-INF/MANIFEST.MF
+cp -p %{SOURCE9} META-INF/MANIFEST.MF
+touch META-INF/MANIFEST.MF
+zip -u %{packdname}/output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
 
 %install
 %{__rm} -rf $RPM_BUILD_ROOT
@@ -355,7 +359,9 @@ popd
     %{_javadir}/%{name}-servlet-%{servletspec}-api.jar 20500
 
 %post webapps
-%{_bindir}/build-jar-repository %{appdir}/examples/WEB-INF/lib \
+# need to use -p here with b-j-r otherwise the examples webapp fails to
+# load with a java.io.IOException
+%{_bindir}/build-jar-repository -p %{appdir}/examples/WEB-INF/lib \
     taglibs-core.jar taglibs-standard.jar 2>&1
 
 %preun
@@ -446,6 +452,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Mon Mar 1 2010 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.24-1
+- Update to 6.0.24.
+
 * Tue Dec 22 2009 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.20-2
 - Drop file requires on /usr/share/java/ecj.jar.
 
