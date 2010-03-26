@@ -54,7 +54,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -95,6 +95,8 @@ Requires(post): /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
 Requires(post): /lib/lsb/init-functions
 Requires(preun): /lib/lsb/init-functions
+Requires(post): jpackage-utils
+Requires(postun): jpackage-utils
 
 %description
 Tomcat is the servlet container that is used in the official Reference
@@ -258,6 +260,8 @@ pushd %{packdname}/output/build
     %{__cp} -a bin/*.{jar,xml} ${RPM_BUILD_ROOT}%{bindir}
     %{__cp} -a conf/*.{policy,properties,xml} ${RPM_BUILD_ROOT}%{confdir}
     %{__cp} -a lib/*.jar ${RPM_BUILD_ROOT}%{libdir}
+    # Put the juli jar under /usr/share/java/ too
+    %{__cp} -a bin/tomcat-juli*.jar ${RPM_BUILD_ROOT}%{libdir}
     %{__cp} -a webapps/* ${RPM_BUILD_ROOT}%{appdir}
 popd
 # javadoc
@@ -333,6 +337,43 @@ pushd ${RPM_BUILD_ROOT}%{appdir}/sample
 popd
 %{__rm} ${RPM_BUILD_ROOT}%{appdir}/docs/appdev/sample/sample.war
 
+# Install the maven metadata
+%{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_mavenpomdir}
+pushd %{packdname}/output/dist/src/res/maven
+for file in *.pom; do
+    base=`basename $file .pom`
+    # Some POMs don't actually have corresponding jar files in the current RPM
+    if [ $base != 'dbcp' -a $base != 'juli-adapters' -a $base != 'juli-extras' ]
+    then
+        sed -i 's/@MAVEN.DEPLOY.VERSION@/%{version}/g' $file
+        %{__cp} -a $file ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-%{name}-$file
+        # Some jar files have tomcat6 prepended and some don't, and some have their
+	# canonical home outside of the tomcat6 subdirectory
+	jppdir="JPP/%{name}"
+        if [ $base = 'coyote' -o $base = 'jsp-api' -o $base = 'servlet-api' ]; then
+            jpp="%{name}-$base"
+	    jppdir="JPP"
+        else
+	    if [ $base = 'tribes' ]; then
+	        jpp=catalina-$base
+	    else
+	        if [ $base = 'juli' -o $base = 'coyote' ]; then
+	            jpp=tomcat-$base
+	        else
+                    jpp=$base
+                fi
+	    fi
+	fi
+
+	if [ $base = 'jasper-jdt' ]; then
+            %add_to_maven_depmap org.apache.tomcat $base %{version} JPP ecj 3.4.2
+	else
+            %add_to_maven_depmap org.apache.tomcat $base %{version} $jppdir $jpp %{version}
+	fi
+    fi
+done
+
+
 %clean
 %{__rm} -rf $RPM_BUILD_ROOT
 
@@ -345,6 +386,7 @@ popd
 %post
 # install but don't activate
 /sbin/chkconfig --add %{name}
+%update_maven_depmap
 
 %post jsp-%{jspspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/jsp.jar jsp \
@@ -379,6 +421,9 @@ if [ "$1" = "0" ]; then
         %{libdir}/\[commons-pool-tomcat5\].jar \
         %{libdir}/\[ecj\].jar >/dev/null 2>&1
 fi
+
+%postun
+%update_maven_depmap
 
 %postun jsp-%{jspspec}-api
 if [ "$1" = "0" ]; then
@@ -419,6 +464,10 @@ fi
 %attr(0775,root,tomcat) %dir %{tempdir}
 %attr(0775,root,tomcat) %dir %{workdir}
 %{homedir}
+%{_mavendepmapfragdir}/*
+%{_mavenpomdir}/*.pom
+# Exclude the POMs that are in sub-packages
+%exclude %{_mavenpomdir}/*api*
 
 %files admin-webapps
 %defattr(0644,root,root,0755)
@@ -436,6 +485,7 @@ fi
 %files jsp-%{jspspec}-api
 %defattr(0644,root,root,0755)
 %{_javadir}/%{name}-jsp*.jar
+%{_mavenpomdir}/JPP-%{name}-jsp-api.pom
 
 %files lib
 %defattr(0644,root,root,0755)
@@ -444,6 +494,7 @@ fi
 %files servlet-%{servletspec}-api
 %defattr(0644,root,root,0755)
 %{_javadir}/%{name}-servlet*.jar
+%{_mavenpomdir}/JPP-%{name}-servlet-api.pom
 
 %files webapps
 %defattr(0644,root,root,0755)
@@ -452,6 +503,10 @@ fi
 %{appdir}/sample
 
 %changelog
+* Fri Mar 26 2010 Mary Ellen Foster <mefoster@gmail.com> 0:6.0.24-2
+- Add maven POMs and metadata
+- Copy tomcat6-juli into /usr/share/java/tomcat6
+
 * Mon Mar 1 2010 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.24-1
 - Update to 6.0.24.
 
