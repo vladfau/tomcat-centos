@@ -260,8 +260,6 @@ pushd %{packdname}/output/build
     %{__cp} -a bin/*.{jar,xml} ${RPM_BUILD_ROOT}%{bindir}
     %{__cp} -a conf/*.{policy,properties,xml} ${RPM_BUILD_ROOT}%{confdir}
     %{__cp} -a lib/*.jar ${RPM_BUILD_ROOT}%{libdir}
-    # Put the juli jar under /usr/share/java/ too
-    %{__cp} -a bin/tomcat-juli*.jar ${RPM_BUILD_ROOT}%{libdir}
     %{__cp} -a webapps/* ${RPM_BUILD_ROOT}%{appdir}
 popd
 # javadoc
@@ -336,6 +334,11 @@ pushd ${RPM_BUILD_ROOT}%{appdir}/sample
 %{jar} xf ${RPM_BUILD_ROOT}%{appdir}/docs/appdev/sample/sample.war
 popd
 %{__rm} ${RPM_BUILD_ROOT}%{appdir}/docs/appdev/sample/sample.war
+
+# Link the juli jars into /usr/share/java/tomcat6
+pushd ${RPM_BUILD_ROOT}%{libdir}
+%{__ln_s} %{bindir}/tomcat-juli* .
+popd
 
 # Install the maven metadata
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_mavenpomdir}
@@ -505,7 +508,7 @@ fi
 %changelog
 * Fri Mar 26 2010 Mary Ellen Foster <mefoster@gmail.com> 0:6.0.24-2
 - Add maven POMs and metadata
-- Copy tomcat6-juli into /usr/share/java/tomcat6
+- Link tomcat6-juli into /usr/share/java/tomcat6
 
 * Mon Mar 1 2010 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.24-1
 - Update to 6.0.24.
