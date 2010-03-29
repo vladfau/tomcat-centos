@@ -28,28 +28,28 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-%define section free
+%global section free
 
-%define jspspec 2.1
-%define major_version 6
-%define minor_version 0
-%define micro_version 24
-%define packdname apache-tomcat-%{version}-src
-%define servletspec 2.5
-%define tcuid 91
+%global jspspec 2.1
+%global major_version 6
+%global minor_version 0
+%global micro_version 26
+%global packdname apache-tomcat-%{version}-src
+%global servletspec 2.5
+%global tcuid 91
 
 # FHS 2.3 compliant tree structure - http://www.pathname.com/fhs/2.3/
-%define basedir %{_var}/lib/%{name}
-%define appdir %{basedir}/webapps
-%define bindir %{_datadir}/%{name}/bin
-%define confdir %{_sysconfdir}/%{name}
-%define homedir %{_datadir}/%{name}
-%define libdir %{_javadir}/%{name}
-%define logdir %{_var}/log/%{name}
-%define cachedir %{_var}/cache/%{name}
-%define tempdir %{cachedir}/temp
-%define workdir %{cachedir}/work
-%define _initrddir %{_sysconfdir}/init.d
+%global basedir %{_var}/lib/%{name}
+%global appdir %{basedir}/webapps
+%global bindir %{_datadir}/%{name}/bin
+%global confdir %{_sysconfdir}/%{name}
+%global homedir %{_datadir}/%{name}
+%global libdir %{_javadir}/%{name}
+%global logdir %{_var}/log/%{name}
+%global cachedir %{_var}/cache/%{name}
+%global tempdir %{cachedir}/temp
+%global workdir %{cachedir}/work
+%global _initrddir %{_sysconfdir}/init.d
 
 Name: tomcat6
 Epoch: 0
@@ -255,8 +255,16 @@ zip -u %{packdname}/output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{homedir}
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{tempdir}
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{workdir}
+
 # move things into place
+# First copy supporting libs to tomcat lib
 pushd %{packdname}/output/build
+   %{_bindir}/build-jar-repository lib commons-collections-tomcat5 \
+    commons-dbcp-tomcat5 commons-pool-tomcat5 ecj 2>&1
+# need to use -p here with b-j-r otherwise the examples webapp fails to
+# load with a java.io.IOException
+   %{_bindir}/build-jar-repository -p webapps/examples/WEB-INF/lib \
+    taglibs-core.jar taglibs-standard.jar 2>&1
     %{__cp} -a bin/*.{jar,xml} ${RPM_BUILD_ROOT}%{bindir}
     %{__cp} -a conf/*.{policy,properties,xml} ${RPM_BUILD_ROOT}%{confdir}
     %{__cp} -a lib/*.jar ${RPM_BUILD_ROOT}%{libdir}
@@ -395,19 +403,19 @@ done
 %{_sbindir}/update-alternatives --install %{_javadir}/jsp.jar jsp \
     %{_javadir}/%{name}-jsp-%{jspspec}-api.jar 20100
 
-%post lib
-%{_bindir}/build-jar-repository %{libdir} commons-collections-tomcat5 \
-    commons-dbcp-tomcat5 commons-pool-tomcat5 ecj 2>&1
+#%post lib
+#%{_bindir}/build-jar-repository %{libdir} commons-collections-tomcat5 \
+#    commons-dbcp-tomcat5 commons-pool-tomcat5 ecj 2>&1
 
 %post servlet-%{servletspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/servlet.jar servlet \
     %{_javadir}/%{name}-servlet-%{servletspec}-api.jar 20500
 
-%post webapps
+#%post webapps
 # need to use -p here with b-j-r otherwise the examples webapp fails to
 # load with a java.io.IOException
-%{_bindir}/build-jar-repository -p %{appdir}/examples/WEB-INF/lib \
-    taglibs-core.jar taglibs-standard.jar 2>&1
+#%{_bindir}/build-jar-repository -p %{appdir}/examples/WEB-INF/lib \
+#    taglibs-core.jar taglibs-standard.jar 2>&1
 
 %preun
 # clean tempdir and workdir on removal or upgrade
@@ -417,13 +425,13 @@ if [ "$1" = "0" ]; then
     /sbin/chkconfig --del %{name}
 fi
 
-%preun lib
-if [ "$1" = "0" ]; then
-    %{__rm} -f %{libdir}/\[commons-collections-tomcat5\].jar \
-        %{libdir}/\[commons-dbcp-tomcat5\].jar \
-        %{libdir}/\[commons-pool-tomcat5\].jar \
-        %{libdir}/\[ecj\].jar >/dev/null 2>&1
-fi
+#%preun lib
+#if [ "$1" = "0" ]; then
+#    %{__rm} -f %{libdir}/\[commons-collections-tomcat5\].jar \
+#        %{libdir}/\[commons-dbcp-tomcat5\].jar \
+#        %{libdir}/\[commons-pool-tomcat5\].jar \
+#        %{libdir}/\[ecj\].jar >/dev/null 2>&1
+#fi
 
 %postun
 %update_maven_depmap
@@ -506,6 +514,12 @@ fi
 %{appdir}/sample
 
 %changelog
+* Mon Mar 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-2
+- Update source to tomcat6.0.26
+- Bugzilla 572357 - Please retest. 
+- OSGi manifests for servlet-api and jsp-api
+
+
 * Fri Mar 26 2010 Mary Ellen Foster <mefoster@gmail.com> 0:6.0.24-2
 - Add maven POMs and metadata
 - Link tomcat6-juli into /usr/share/java/tomcat6
