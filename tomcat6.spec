@@ -54,7 +54,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 2%{?dist}
+Release: 1%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -80,7 +80,11 @@ BuildRequires: ant-trax
 BuildRequires: ecj
 BuildRequires: findutils
 BuildRequires: jakarta-commons-collections
+BuildRequires: jakarta-commons-collections-tomcat5
 BuildRequires: jakarta-commons-daemon
+BuildRequires: jakarta-commons-dbcp-tomcat5
+BuildRequires: jakarta-commons-pool-tomcat5
+BuildRequires: jakarta-taglibs-standard
 BuildRequires: java-1.6.0-devel
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
@@ -148,10 +152,10 @@ Group: Development/Compilers
 Summary: Libraries needed to run the Tomcat Web container
 Requires: %{name}-jsp-%{jspspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
-Requires(post): ecj
-Requires(post): jakarta-commons-collections-tomcat5
-Requires(post): jakarta-commons-dbcp-tomcat5
-Requires(post): jakarta-commons-pool-tomcat5
+Requires: ecj
+Requires: jakarta-commons-collections-tomcat5
+Requires: jakarta-commons-dbcp-tomcat5
+Requires: jakarta-commons-pool-tomcat5
 Requires(preun): coreutils
 
 %description lib
@@ -173,7 +177,7 @@ Apache Tomcat Servlet API implementation classes.
 Group: System Environment/Applications
 Summary: The ROOT and examples web applications for Apache Tomcat
 Requires: %{name} = %{epoch}:%{version}-%{release}
-Requires(post): jakarta-taglibs-standard >= 0:1.1
+Requires: jakarta-taglibs-standard >= 0:1.1
 
 %description webapps
 The ROOT and examples web applications for Apache Tomcat.
@@ -514,7 +518,12 @@ fi
 %{appdir}/sample
 
 %changelog
-* Mon Mar 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-2
+* Tue Apr 06 2010 David Knox <dknox@redhat.com> 0:6.0.26-1
+- Solved packaging problems involving taglibs-standard
+- Solved packaging problems involving jakarta-commons
+- Corrected Requires(post) to Requires and checked companion BuildRequires
+
+* Mon Mar 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-1
 - Update source to tomcat6.0.26
 - Bugzilla 572357 - Please retest. 
 - OSGi manifests for servlet-api and jsp-api
