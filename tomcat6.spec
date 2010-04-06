@@ -54,7 +54,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 1%{?dist}
+Release: 3%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -518,12 +518,16 @@ fi
 %{appdir}/sample
 
 %changelog
+* Tue Apr 06 2010 David Knox <dknox@redhat.com> 0:6.0.26-3
+- Incremented the Release tag to 3 to avoid any confusion about which
+- is the most recent
+
 * Tue Apr 06 2010 David Knox <dknox@redhat.com> 0:6.0.26-1
 - Solved packaging problems involving taglibs-standard
 - Solved packaging problems involving jakarta-commons
 - Corrected Requires(post) to Requires and checked companion BuildRequires
 
-* Mon Mar 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-1
+* Mon Mar 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-2
 - Update source to tomcat6.0.26
 - Bugzilla 572357 - Please retest. 
 - OSGi manifests for servlet-api and jsp-api
