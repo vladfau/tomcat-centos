@@ -54,7 +54,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 3%{?dist}
+Release: 4%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -263,12 +263,6 @@ zip -u %{packdname}/output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
 # move things into place
 # First copy supporting libs to tomcat lib
 pushd %{packdname}/output/build
-   %{_bindir}/build-jar-repository lib commons-collections-tomcat5 \
-    commons-dbcp-tomcat5 commons-pool-tomcat5 ecj 2>&1
-# need to use -p here with b-j-r otherwise the examples webapp fails to
-# load with a java.io.IOException
-   %{_bindir}/build-jar-repository -p webapps/examples/WEB-INF/lib \
-    taglibs-core.jar taglibs-standard.jar 2>&1
     %{__cp} -a bin/*.{jar,xml} ${RPM_BUILD_ROOT}%{bindir}
     %{__cp} -a conf/*.{policy,properties,xml} ${RPM_BUILD_ROOT}%{confdir}
     %{__cp} -a lib/*.jar ${RPM_BUILD_ROOT}%{libdir}
@@ -311,6 +305,16 @@ pushd ${RPM_BUILD_ROOT}%{_javadir}
     %{__ln_s} %{name}-servlet-%{servletspec}-api-%{version}.jar \
         %{name}-servlet-%{servletspec}-api.jar
 popd
+
+pushd %{packdname}/output/build
+   %{_bindir}/build-jar-repository lib commons-collections-tomcat5 \
+    commons-dbcp-tomcat5 commons-pool-tomcat5 ecj 2>&1
+# need to use -p here with b-j-r otherwise the examples webapp fails to
+# load with a java.io.IOException
+   %{_bindir}/build-jar-repository -p webapps/examples/WEB-INF/lib \
+    taglibs-core.jar taglibs-standard.jar 2>&1
+popd
+
 pushd ${RPM_BUILD_ROOT}%{libdir}
     # fix up jars to include version number
     for i in *.jar; do
@@ -518,6 +522,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Tue Apr 08 2010 David Knox <dknox@redhat.com> 0:6.0.26-4
+- Moved build-jar-repository to later in the install process.  
+
 * Tue Apr 06 2010 David Knox <dknox@redhat.com> 0:6.0.26-3
 - Incremented the Release tag to 3 to avoid any confusion about which
 - is the most recent
