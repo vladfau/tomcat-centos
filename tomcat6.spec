@@ -36,6 +36,7 @@
 %global micro_version 26
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 2.5
+%global elspec 2.1
 %global tcuid 91
 
 # FHS 2.3 compliant tree structure - http://www.pathname.com/fhs/2.3/
@@ -54,7 +55,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 4%{?dist}
+Release: 6%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -70,11 +71,11 @@ Source6: %{name}-%{major_version}.%{minor_version}-digest.script
 Source7: %{name}-%{major_version}.%{minor_version}-tool-wrapper.script
 Source8: servlet-api-OSGi-MANIFEST.MF
 Source9: jsp-api-OSGi-MANIFEST.MF
+Source10: %{name}-%{major_version}.%{minor_version}-log4j.properties
 Patch0: %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1: %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildArch: noarch
-
 BuildRequires: ant
 BuildRequires: ant-trax
 BuildRequires: ecj
@@ -88,10 +89,12 @@ BuildRequires: jakarta-taglibs-standard
 BuildRequires: java-1.6.0-devel
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
+BuildRequires: log4j
 Requires(pre): shadow-utils
 Requires(pre): shadow-utils
 Requires: jakarta-commons-daemon
 Requires: jakarta-commons-logging
+Requires: jakarta-commons-collections
 Requires: java-1.6.0
 Requires: procps
 Requires: %{name}-lib = %{epoch}:%{version}-%{release}
@@ -147,11 +150,21 @@ Requires(postun): %{_sbindir}/update-alternatives
 %description jsp-%{jspspec}-api
 Apache Tomcat JSP API implementation classes.
 
+
+%package log4j
+Group: Internet/WWW/Dynamic Content
+Summary: Log4j support for Apache Tomcat
+Requires: jakarta-commons-logging
+
+%description log4j
+Log4j support for Apache Tomcat
+
 %package lib
 Group: Development/Compilers
 Summary: Libraries needed to run the Tomcat Web container
 Requires: %{name}-jsp-%{jspspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
+Requires: %{name}-el-%{elspec}-api = %{epoch}:%{version}-%{release}
 Requires: ecj
 Requires: jakarta-commons-collections-tomcat5
 Requires: jakarta-commons-dbcp-tomcat5
@@ -173,6 +186,17 @@ Requires(postun): %{_sbindir}/update-alternatives
 %description servlet-%{servletspec}-api
 Apache Tomcat Servlet API implementation classes.
 
+%package el-%{elspec}-api
+Group: Development/Libraries/Java
+Summary: Expression Language v1.0 API
+Provides: el_1_0_api = %{epoch}:%{version}-%{release}
+Provides: el_api = %{elspec}
+Requires(post): %{_sbindir}/update-alternatives
+Requires(postun): %{_sbindir}/update-alternatives
+
+%description el-%{elspec}-api
+Expression Language 1.0.
+
 %package webapps
 Group: System Environment/Applications
 Summary: The ROOT and examples web applications for Apache Tomcat
@@ -186,43 +210,45 @@ The ROOT and examples web applications for Apache Tomcat.
 %setup -q -c -T -a 0
 # remove pre-built binaries and windows files
 find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "*.gz" -o \
-          -name "*.jar" -o -name "*.war" -o -name "*.zip" \) | xargs -t %{__rm}
+   -name "*.jar" -o -name "*.war" -o -name "*.zip" \) | xargs -t %{__rm}
 pushd %{packdname}
 %patch0 -p0
 %patch1 -p0
+%{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
+%{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
 popd
 
 %build
 export CLASSPATH=
 export OPT_JAR_LIST="ant/ant-trax"
 pushd %{packdname}
-    # we don't care about the tarballs and we're going to replace
-    # tomcat-dbcp.jar with jakarta-commons-{collections,dbcp,pool}-tomcat5.jar
-    # so just create a dummy file for later removal
-    touch HACK
-    # who needs a build.properties file anyway
-    %{ant} -Dbase.path="." \
-        -Dbuild.compiler="modern" \
-        -Dcommons-collections.jar="$(build-classpath commons-collections)" \
-        -Dcommons-daemon.jar="$(build-classpath commons-daemon)" \
-        -Dcommons-daemon.jsvc.tar.gz="HACK" \
-        -Djasper-jdt.jar="$(build-classpath ecj)" \
-        -Djdt.jar="$(build-classpath ecj)" \
-        -Dtomcat-dbcp.jar="HACK" \
-        -Dtomcat-native.tar.gz="HACK" \
-        -Dversion="%{version}" \
-        -Dversion.build="%{micro_version}"
-    # javadoc generation
-    %{ant} -f dist.xml dist-prepare
-    %{ant} -f dist.xml dist-source
-    %{ant} -f dist.xml dist-javadoc
+   # we don't care about the tarballs and we're going to replace
+   # tomcat-dbcp.jar with jakarta-commons-{collections,dbcp,pool}-tomcat5.jar
+   # so just create a dummy file for later removal
+   touch HACK
+   # who needs a build.properties file anyway
+   %{ant} -Dbase.path="." \
+      -Dbuild.compiler="modern" \
+      -Dcommons-collections.jar="$(build-classpath commons-collections)" \
+      -Dcommons-daemon.jar="$(build-classpath commons-daemon)" \
+      -Dcommons-daemon.jsvc.tar.gz="HACK" \
+      -Djasper-jdt.jar="$(build-classpath ecj)" \
+      -Djdt.jar="$(build-classpath ecj)" \
+      -Dtomcat-dbcp.jar="HACK" \
+      -Dtomcat-native.tar.gz="HACK" \
+      -Dversion="%{version}" \
+      -Dversion.build="%{micro_version}"
+   # javadoc generation
+   %{ant} -f dist.xml dist-prepare
+   %{ant} -f dist.xml dist-source
+   %{ant} -f dist.xml dist-javadoc
     # remove some jars that we'll replace with symlinks later
-    %{__rm} output/build/bin/commons-daemon.jar \
-            output/build/lib/ecj.jar
+   %{__rm} output/build/bin/commons-daemon.jar \
+      output/build/lib/ecj.jar
     # remove the cruft we created
-    %{__rm} output/build/bin/HACK \
-            output/build/bin/tomcat-native.tar.gz \
-            output/build/lib/HACK
+   %{__rm} output/build/bin/HACK \
+      output/build/bin/tomcat-native.tar.gz \
+      output/build/lib/HACK
 popd
 pushd %{packdname}/output/dist/src/webapps/docs/appdev/sample/src
 %{__mkdir_p} ../web/WEB-INF/classes
@@ -252,18 +278,19 @@ zip -u %{packdname}/output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{appdir}
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{bindir}
-%{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{confdir}
-%{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{confdir}/Catalina/localhost
+%{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{confdir}
+%{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{confdir}/Catalina/localhost
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{libdir}
-%{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{logdir}
-%{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{homedir}
-%{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{tempdir}
-%{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{workdir}
+%{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{logdir}
+%{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{homedir}
+%{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{tempdir}
+%{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{workdir}
 
 # move things into place
 # First copy supporting libs to tomcat lib
 pushd %{packdname}/output/build
     %{__cp} -a bin/*.{jar,xml} ${RPM_BUILD_ROOT}%{bindir}
+    %{__cp} %{SOURCE10} conf/log4j.properties
     %{__cp} -a conf/*.{policy,properties,xml} ${RPM_BUILD_ROOT}%{confdir}
     %{__cp} -a lib/*.jar ${RPM_BUILD_ROOT}%{libdir}
     %{__cp} -a webapps/* ${RPM_BUILD_ROOT}%{appdir}
@@ -273,12 +300,12 @@ pushd %{packdname}/output/dist/webapps
     %{__cp} -a docs/api/* ${RPM_BUILD_ROOT}%{_javadocdir}/%{name}
 popd
 %{__sed} -e "s|\@\@\@TCHOME\@\@\@|%{homedir}|g" \
-         -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
-         -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE1} \
+   -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
+   -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE1} \
     > ${RPM_BUILD_ROOT}%{confdir}/%{name}.conf
 %{__sed} -e "s|\@\@\@TCHOME\@\@\@|%{homedir}|g" \
-         -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
-         -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE3} \
+   -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
+   -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE3} \
     > ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/%{name}
 %{__install} -m 0644 %{SOURCE2} \
     ${RPM_BUILD_ROOT}%{_initrddir}/%{name}
@@ -288,22 +315,24 @@ popd
 %{__sed} -e "s|\@\@\@TCLOG\@\@\@|%{logdir}|g" %{SOURCE5} \
     > ${RPM_BUILD_ROOT}%{_sysconfdir}/logrotate.d/%{name}
 %{__sed} -e "s|\@\@\@TCHOME\@\@\@|%{homedir}|g" \
-         -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
-         -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE6} \
+   -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
+   -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE6} \
     > ${RPM_BUILD_ROOT}%{_bindir}/%{name}-digest
 %{__sed} -e "s|\@\@\@TCHOME\@\@\@|%{homedir}|g" \
-         -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
-         -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE7} \
+   -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
+   -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE7} \
     > ${RPM_BUILD_ROOT}%{_bindir}/%{name}-tool-wrapper
 # create jsp and servlet API symlinks
 pushd ${RPM_BUILD_ROOT}%{_javadir}
-    %{__mv} %{name}/jsp-api.jar %{name}-jsp-%{jspspec}-api-%{version}.jar
-    %{__mv} %{name}/servlet-api.jar \
-        %{name}-servlet-%{servletspec}-api-%{version}.jar
-    %{__ln_s} %{name}-jsp-%{jspspec}-api-%{version}.jar \
-        %{name}-jsp-%{jspspec}-api.jar
-    %{__ln_s} %{name}-servlet-%{servletspec}-api-%{version}.jar \
-        %{name}-servlet-%{servletspec}-api.jar
+   %{__mv} %{name}/jsp-api.jar %{name}-jsp-%{jspspec}-api-%{version}.jar
+   %{__mv} %{name}/servlet-api.jar \
+      %{name}-servlet-%{servletspec}-api-%{version}.jar
+   %{__mv} %{name}/el-api.jar %{name}-el-%{elspec}-api-%{version}.jar
+   %{__ln_s} %{name}-jsp-%{jspspec}-api-%{version}.jar \
+      %{name}-jsp-%{jspspec}-api.jar
+   %{__ln_s} %{name}-servlet-%{servletspec}-api-%{version}.jar \
+      %{name}-servlet-%{servletspec}-api.jar
+   %{__ln_s} %{name}-el-%{elspec}-api-%{version}.jar %{name}-el-%{elspec}-api.jar
 popd
 
 pushd %{packdname}/output/build
@@ -316,23 +345,30 @@ pushd %{packdname}/output/build
 popd
 
 pushd ${RPM_BUILD_ROOT}%{libdir}
-    # fix up jars to include version number
-    for i in *.jar; do
-        j="$(echo $i | %{__sed} -e 's,\.jar$,,')"
-        %{__mv} ${j}.jar ${j}-%{version}.jar
-        %{__ln_s} ${j}-%{version}.jar ${j}.jar
+   # fix up jars to include version number
+   for i in *.jar; do
+      j="$(echo $i | %{__sed} -e 's,\.jar$,,')"
+      %{__mv} ${j}.jar ${j}-%{version}.jar
+      %{__ln_s} ${j}-%{version}.jar ${j}.jar
     done
     # symlink JSP and servlet API jars
     %{__ln_s} ../%{name}-jsp-%{jspspec}-api-%{version}.jar .
     %{__ln_s} ../%{name}-servlet-%{servletspec}-api-%{version}.jar .
+    %{__ln_s} ../%{name}-el-%{elspec}-api-%{version}.jar
+    %{__cp} -p $(build-classpath commons-collections-tomcat5) .
+    %{__cp} -p $(build-classpath log4j) .
+    %{__ln_s} log4j log4j-%{version}.jar
+    %{__ln_s} $(build-classpath commons-dbcp-tomcat5) .
+    %{__ln_s} $(build-classpath commons-pool-tomcat5) .
+    %{__ln_s} $(build-classpath ecj) jasper-jdt.jar
 popd
 pushd ${RPM_BUILD_ROOT}%{bindir}
-    # fix up jars to include version number
-    for i in *.jar; do
-        j="$(echo $i | %{__sed} -e 's,\.jar$,,')"
-        %{__mv} ${j}.jar ${j}-%{version}.jar
-        %{__ln_s} ${j}-%{version}.jar ${j}.jar
-    done
+   # fix up jars to include version number
+   for i in *.jar; do
+      j="$(echo $i | %{__sed} -e 's,\.jar$,,')"
+      %{__mv} ${j}.jar ${j}-%{version}.jar
+      %{__ln_s} ${j}-%{version}.jar ${j}.jar
+   done
 popd
 # symlink to the FHS locations where we've installed things
 pushd ${RPM_BUILD_ROOT}%{homedir}
@@ -360,36 +396,35 @@ popd
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_mavenpomdir}
 pushd %{packdname}/output/dist/src/res/maven
 for file in *.pom; do
-    base=`basename $file .pom`
-    # Some POMs don't actually have corresponding jar files in the current RPM
-    if [ $base != 'dbcp' -a $base != 'juli-adapters' -a $base != 'juli-extras' ]
-    then
-        sed -i 's/@MAVEN.DEPLOY.VERSION@/%{version}/g' $file
-        %{__cp} -a $file ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-%{name}-$file
-        # Some jar files have tomcat6 prepended and some don't, and some have their
-	# canonical home outside of the tomcat6 subdirectory
-	jppdir="JPP/%{name}"
-        if [ $base = 'coyote' -o $base = 'jsp-api' -o $base = 'servlet-api' ]; then
-            jpp="%{name}-$base"
-	    jppdir="JPP"
-        else
-	    if [ $base = 'tribes' ]; then
-	        jpp=catalina-$base
-	    else
-	        if [ $base = 'juli' -o $base = 'coyote' ]; then
-	            jpp=tomcat-$base
-	        else
-                    jpp=$base
-                fi
-	    fi
-	fi
+   base=`basename $file .pom`
+   # Some POMs don't actually have corresponding jar files in the current RPM
+   if [ $base != 'dbcp' -a $base != 'juli-adapters' -a $base != 'juli-extras' ]; then
+      sed -i 's/@MAVEN.DEPLOY.VERSION@/%{version}/g' $file
+      %{__cp} -a $file ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-%{name}-$file
+      # Some jar files have tomcat6 prepended and some don't, and some have their
+      # canonical home outside of the tomcat6 subdirectory
+      jppdir="JPP/%{name}"
+      if [ $base = 'coyote' -o $base = 'jsp-api' -o $base = 'servlet-api' ]; then
+         jpp="%{name}-$base"
+         jppdir="JPP"
+      else
+         if [ $base = 'tribes' ]; then
+            jpp=catalina-$base
+         else
+            if [ $base = 'juli' -o $base = 'coyote' ]; then
+               jpp=tomcat-$base
+            else
+               jpp=$base
+            fi
+         fi
+      fi
 
-	if [ $base = 'jasper-jdt' ]; then
-            %add_to_maven_depmap org.apache.tomcat $base %{version} JPP ecj 3.4.2
-	else
-            %add_to_maven_depmap org.apache.tomcat $base %{version} $jppdir $jpp %{version}
-	fi
-    fi
+      if [ $base = 'jasper-jdt' ]; then
+         %add_to_maven_depmap org.apache.tomcat $base %{version} JPP ecj 3.4.2
+      else
+         %add_to_maven_depmap org.apache.tomcat $base %{version} $jppdir $jpp %{version}
+      fi
+   fi
 done
 
 
@@ -419,6 +454,10 @@ done
 %{_sbindir}/update-alternatives --install %{_javadir}/servlet.jar servlet \
     %{_javadir}/%{name}-servlet-%{servletspec}-api.jar 20500
 
+%post el-%{elspec}-api
+%{_sbindir}/update-alternatives --install %{_javadir}/el.jar elspec \
+   %{_javadir}/%{name}-el-%{elspec}-api.jar 20250
+
 #%post webapps
 # need to use -p here with b-j-r otherwise the examples webapp fails to
 # load with a java.io.IOException
@@ -427,7 +466,7 @@ done
 
 %preun
 # clean tempdir and workdir on removal or upgrade
-%{__rm} -rf %{workdir}/* %{tempdir}/*
+%{__rm} -rf %{workdir} %{tempdir}
 if [ "$1" = "0" ]; then
     %{_initrddir}/%{name} stop >/dev/null 2>&1
     /sbin/chkconfig --del %{name}
@@ -443,6 +482,9 @@ fi
 
 %postun
 %update_maven_depmap
+%{__rm} -rf %{appdir}
+%{__rm} -rf %{confdir}
+%{__rm} -rf %{libdir}
 
 %postun jsp-%{jspspec}-api
 if [ "$1" = "0" ]; then
@@ -456,40 +498,61 @@ if [ "$1" = "0" ]; then
         %{_javadir}/%{name}-servlet-%{servletspec}-api.jar
 fi
 
+%postun el-%{elspec}-api
+if [ "$1" = "0" ]; then
+    %{_sbindir}/update-alternatives --remove elspec \
+        %{_javadir}/%{name}-el-%{elspec}-api.jar
+el-%{elspec}-api.jar
+fi
+
 %files
-%defattr(0644,root,root,0755)
+%defattr(0644,root,tomcat,0775)
 %doc %{packdname}/{LICENSE,NOTICE,RELEASE*}
 %attr(0755,root,root) %{_bindir}/%{name}-digest
 %attr(0755,root,root) %{_bindir}/%{name}-tool-wrapper
 %attr(0755,root,root) %{_sbindir}/d%{name}
 %attr(0755,root,root) %{_sbindir}/%{name}
-%attr(0775,root,tomcat) %dir %{logdir}
 %attr(0755,root,root) %{_initrddir}/%{name}
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
-%dir %{basedir}
-%attr(0775,root,tomcat) %dir %{appdir}
-%dir %{confdir}
-%dir %{confdir}/Catalina
-%attr(0775,root,tomcat) %dir %{confdir}/Catalina/localhost
+%attr(0765,root,tomcat) %dir %{basedir}
+%attr(0765,root,tomcat) %dir %{appdir}
+%attr(0765,root,tomcat) %dir %{confdir}
+%attr(0765,root,tomcat) %dir %{confdir}/Catalina
+#%dir %{confdir}
+#%dir %{confdir}/Catalina
+%attr(0765,root,tomcat) %dir %{confdir}/Catalina/localhost
 %config(noreplace) %{confdir}/%{name}.conf
 %config(noreplace) %{confdir}/*.policy
 %config(noreplace) %{confdir}/*.properties
 %config(noreplace) %{confdir}/context.xml
 %config(noreplace) %{confdir}/server.xml
-%attr(0660,root,tomcat) %config(noreplace) %{confdir}/tomcat-users.xml
+%attr(0664,root,tomcat) %config(noreplace) %{confdir}/tomcat-users.xml
 %config(noreplace) %{confdir}/web.xml
-%attr(0775,root,tomcat) %dir %{cachedir}
-%attr(0775,root,tomcat) %dir %{tempdir}
-%attr(0775,root,tomcat) %dir %{workdir}
-%{homedir}
+%attr(0765,tomcat,root) %dir %{cachedir}
+%attr(0765,tomcat,root) %dir %{tempdir}
+%attr(0765,tomcat,root) %dir %{workdir}
+%attr(0765,root,tomcat) %dir %{logdir}
+%dir %{homedir}
+#%attr(0765,root,tomcat) %{homedir}/conf
+%{bindir}/bootstrap-%{version}.jar
+%{bindir}/bootstrap.jar
+%{bindir}/catalina-tasks.xml
+%{bindir}/tomcat-juli-%{version}.jar
+%{bindir}/tomcat-juli.jar
+%{homedir}/lib
+%{homedir}/temp
+%{homedir}/webapps
+%{homedir}/work
+%{homedir}/logs
+%{homedir}/conf
 %{_mavendepmapfragdir}/*
 %{_mavenpomdir}/*.pom
 # Exclude the POMs that are in sub-packages
 %exclude %{_mavenpomdir}/*api*
 
 %files admin-webapps
-%defattr(0644,root,root,0755)
+%defattr(0644,root,root,0775)
 %{appdir}/host-manager
 %{appdir}/manager
 
@@ -503,8 +566,14 @@ fi
 
 %files jsp-%{jspspec}-api
 %defattr(0644,root,root,0755)
-%{_javadir}/%{name}-jsp*.jar
+%{_javadir}/%{name}-jsp-%{jspspec}*.jar
 %{_mavenpomdir}/JPP-%{name}-jsp-api.pom
+
+%files log4j
+%defattr(0644,root,tomcat,0775)
+%config(noreplace) %{confdir}/log4j.properties
+%{libdir}/log4j.jar
+%{libdir}/log4j-%{version}.jar
 
 %files lib
 %defattr(0644,root,root,0755)
@@ -512,16 +581,30 @@ fi
 
 %files servlet-%{servletspec}-api
 %defattr(0644,root,root,0755)
-%{_javadir}/%{name}-servlet*.jar
+%{_javadir}/%{name}-servlet-%{servletspec}*.jar
 %{_mavenpomdir}/JPP-%{name}-servlet-api.pom
 
+%files el-%{elspec}-api
+%defattr(0665,root,root,0755)
+%{_javadir}/%{name}-el-%{elspec}-api-%{version}.jar
+%{_javadir}/%{name}-el-%{elspec}-api.jar
+%{_javadir}/%{name}/%{name}-el-%{elspec}-api-%{version}.jar
+%{_mavenpomdir}/JPP-%{name}-el-api.pom
+
 %files webapps
-%defattr(0644,root,root,0755)
+%defattr(0644,root,tomcat,0775)
 %{appdir}/ROOT
 %{appdir}/examples
 %{appdir}/sample
 
 %changelog
+* Tue Jun 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-6
+- Completed package and file sections. Added el-spec. Fixed
+- directory permission problems.
+
+* Thu May 6 2010 David Knox <dknox@redhat.com> 0:6.0.26-5
+- Working on 589145. Tomcat can't find java compiler for java.
+
 * Tue Apr 08 2010 David Knox <dknox@redhat.com> 0:6.0.26-4
 - Moved build-jar-repository to later in the install process.  
 
