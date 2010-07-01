@@ -55,7 +55,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 7%{?dist}
+Release: 8%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -597,8 +597,11 @@ fi
 %{appdir}/sample
 
 %changelog
+* Fri Jul 02 2010 David Knox <dknox@rehat.com> 0:6.0.26-8
+- LSB initscript compliance 
+
 * Thu Jul 01 2010 David Knox <dknox@redhat.com> 0:6.0.26-7
-- Made elspec the standard for elspec %post and %postun
+- Made elspec the standard for elspec %post and %postun.
 
 * Tue Jun 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-6
 - Completed package and file sections. Added el-spec. Fixed
