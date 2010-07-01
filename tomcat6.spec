@@ -55,7 +55,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 6%{?dist}
+Release: 7%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -455,7 +455,7 @@ done
     %{_javadir}/%{name}-servlet-%{servletspec}-api.jar 20500
 
 %post el-%{elspec}-api
-%{_sbindir}/update-alternatives --install %{_javadir}/el.jar elspec \
+%{_sbindir}/update-alternatives --install %{_javadir}/elspec.jar elspec \
    %{_javadir}/%{name}-el-%{elspec}-api.jar 20250
 
 #%post webapps
@@ -502,7 +502,6 @@ fi
 if [ "$1" = "0" ]; then
     %{_sbindir}/update-alternatives --remove elspec \
         %{_javadir}/%{name}-el-%{elspec}-api.jar
-el-%{elspec}-api.jar
 fi
 
 %files
@@ -598,6 +597,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Thu Jul 01 2010 David Knox <dknox@redhat.com> 0:6.0.26-7
+- Made elspec the standard for elspec %post and %postun
+
 * Tue Jun 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-6
 - Completed package and file sections. Added el-spec. Fixed
 - directory permission problems.
