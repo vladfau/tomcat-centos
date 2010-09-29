@@ -597,6 +597,10 @@ fi
 %{appdir}/sample
 
 %changelog
+* Fri Jul 02 2010 David Knox <dknox@rehat.com> 0:6.0.26-9
+- Resolves rhbz#575341 - Additionally created instances of Tomcat 
+- are broken
+
 * Fri Jul 02 2010 David Knox <dknox@rehat.com> 0:6.0.26-8
 - LSB initscript compliance 
 
