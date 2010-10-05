@@ -55,7 +55,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 9%{?dist}
+Release: 10%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -74,10 +74,11 @@ Source9: jsp-api-OSGi-MANIFEST.MF
 Source10: %{name}-%{major_version}.%{minor_version}-log4j.properties
 Patch0: %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1: %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
+Patch2: %{name}-%{major_version}.%{minor_version}-CVE-2010-2227.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildArch: noarch
 BuildRequires: ant
-BuildRequires: ant-trax
+BuildRequires: ant-nodeps
 BuildRequires: ecj
 BuildRequires: findutils
 BuildRequires: jakarta-commons-collections
@@ -214,13 +215,14 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 pushd %{packdname}
 %patch0 -p0
 %patch1 -p0
+%patch2 -p0
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
 popd
 
 %build
 export CLASSPATH=
-export OPT_JAR_LIST="ant/ant-trax"
+export OPT_JAR_LIST="ant/ant-nodeps"
 pushd %{packdname}
    # we don't care about the tarballs and we're going to replace
    # tomcat-dbcp.jar with jakarta-commons-{collections,dbcp,pool}-tomcat5.jar
@@ -597,7 +599,11 @@ fi
 %{appdir}/sample
 
 %changelog
-* Fri Jul 02 2010 David Knox <dknox@rehat.com> 0:6.0.26-9
+* Mon Oct 04 2010 David Knox <dknox@redhat.com> 0:6.0.26-10
+- ant-nodeps is breaking the build. Put ant-nodeps on the 
+- OPT_JAR_LIST
+
+* Fri Oct 01 2010 David Knox <dknox@rehat.com> 0:6.0.26-9
 - Resolves rhbz#575341 - Additionally created instances of Tomcat 
 - are broken
 
