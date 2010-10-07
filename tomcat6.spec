@@ -55,7 +55,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 10%{?dist}
+Release: 11%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -599,6 +599,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Thu Oct 07 2010 David Knox <dknox@redhat.com> 0L6.0.26-11
+- resolves rhbz#640837 - tomcat user requires login shell
+
 * Mon Oct 04 2010 David Knox <dknox@redhat.com> 0:6.0.26-10
 - ant-nodeps is breaking the build. Put ant-nodeps on the 
 - OPT_JAR_LIST

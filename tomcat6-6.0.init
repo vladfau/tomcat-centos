@@ -38,9 +38,9 @@ fi
 
 # For SELinux we need to use 'runuser' not 'su'
 if [ -x "/sbin/runuser" ]; then
-    SU="/sbin/runuser"
+    SU="/sbin/runuser -s /bin/sh"
 else
-    SU="/bin/su"
+    SU="/bin/su -s /bin/sh"
 fi
 
 # Get the tomcat config (use this for environment specific settings)
