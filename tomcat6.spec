@@ -82,10 +82,12 @@ BuildRequires: ant-nodeps
 BuildRequires: ecj
 BuildRequires: findutils
 BuildRequires: jakarta-commons-collections
-BuildRequires: jakarta-commons-collections-tomcat5
+#BuildRequires: jakarta-commons-collections-tomcat5
 BuildRequires: jakarta-commons-daemon
-BuildRequires: jakarta-commons-dbcp-tomcat5
-BuildRequires: jakarta-commons-pool-tomcat5
+#BuildRequires: jakarta-commons-dbcp-tomcat5
+#BuildRequires: jakarta-commons-pool-tomcat5
+BuildRequires: jakarta-commons-dbcp
+BuildRequires: jakarta-commons-pool
 BuildRequires: jakarta-taglibs-standard
 BuildRequires: java-1.6.0-devel
 BuildRequires: jpackage-utils >= 0:1.7.0
@@ -167,9 +169,9 @@ Requires: %{name}-jsp-%{jspspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-el-%{elspec}-api = %{epoch}:%{version}-%{release}
 Requires: ecj
-Requires: jakarta-commons-collections-tomcat5
-Requires: jakarta-commons-dbcp-tomcat5
-Requires: jakarta-commons-pool-tomcat5
+Requires: jakarta-commons-collections
+Requires: jakarta-commons-dbcp
+Requires: jakarta-commons-pool
 Requires(preun): coreutils
 
 %description lib
@@ -231,12 +233,12 @@ pushd %{packdname}
    # who needs a build.properties file anyway
    %{ant} -Dbase.path="." \
       -Dbuild.compiler="modern" \
-      -Dcommons-collections.jar="$(build-classpath commons-collections)" \
+      -Dcommons-collections.jar="$(build-classpath jakarata-commons-collections)" \
       -Dcommons-daemon.jar="$(build-classpath commons-daemon)" \
       -Dcommons-daemon.jsvc.tar.gz="HACK" \
       -Djasper-jdt.jar="$(build-classpath ecj)" \
       -Djdt.jar="$(build-classpath ecj)" \
-      -Dtomcat-dbcp.jar="HACK" \
+      -Dtomcat-dbcp.jar="$(build-classpath commons-dbcp)" \
       -Dtomcat-native.tar.gz="HACK" \
       -Dversion="%{version}" \
       -Dversion.build="%{micro_version}"
@@ -249,8 +251,7 @@ pushd %{packdname}
       output/build/lib/ecj.jar
     # remove the cruft we created
    %{__rm} output/build/bin/HACK \
-      output/build/bin/tomcat-native.tar.gz \
-      output/build/lib/HACK
+      output/build/bin/tomcat-native.tar.gz 
 popd
 pushd %{packdname}/output/dist/src/webapps/docs/appdev/sample/src
 %{__mkdir_p} ../web/WEB-INF/classes
@@ -338,8 +339,8 @@ pushd ${RPM_BUILD_ROOT}%{_javadir}
 popd
 
 pushd %{packdname}/output/build
-   %{_bindir}/build-jar-repository lib commons-collections-tomcat5 \
-    commons-dbcp-tomcat5 commons-pool-tomcat5 ecj 2>&1
+   %{_bindir}/build-jar-repository lib commons-collections \
+    commons-dbcp commons-pool ecj 2>&1
 # need to use -p here with b-j-r otherwise the examples webapp fails to
 # load with a java.io.IOException
    %{_bindir}/build-jar-repository -p webapps/examples/WEB-INF/lib \
@@ -357,11 +358,11 @@ pushd ${RPM_BUILD_ROOT}%{libdir}
     %{__ln_s} ../%{name}-jsp-%{jspspec}-api-%{version}.jar .
     %{__ln_s} ../%{name}-servlet-%{servletspec}-api-%{version}.jar .
     %{__ln_s} ../%{name}-el-%{elspec}-api-%{version}.jar
-    %{__cp} -p $(build-classpath commons-collections-tomcat5) .
+    %{__cp} -p $(build-classpath commons-collections) .
     %{__cp} -p $(build-classpath log4j) .
     %{__ln_s} log4j log4j-%{version}.jar
-    %{__ln_s} $(build-classpath commons-dbcp-tomcat5) .
-    %{__ln_s} $(build-classpath commons-pool-tomcat5) .
+#    %{__ln_s} $(build-classpath commons-dbcp) .
+#    %{__ln_s} $(build-classpath commons-pool) .
     %{__ln_s} $(build-classpath ecj) jasper-jdt.jar
 popd
 pushd ${RPM_BUILD_ROOT}%{bindir}
@@ -484,9 +485,9 @@ fi
 
 %postun
 %update_maven_depmap
-%{__rm} -rf %{appdir}
-%{__rm} -rf %{confdir}
-%{__rm} -rf %{libdir}
+#%{__rm} -rf %{appdir}
+#%{__rm} -rf %{confdir}
+#%{__rm} -rf %{libdir}
 
 %postun jsp-%{jspspec}-api
 if [ "$1" = "0" ]; then
@@ -599,7 +600,14 @@ fi
 %{appdir}/sample
 
 %changelog
-* Thu Oct 07 2010 David Knox <dknox@redhat.com> 0L6.0.26-11
+* Thu Oct 14 2010 David Knox <dknox@redhat.com> 0:6.0.26-12
+- Resolves rhbz#640686 - Upgrade of tomcat6 wipes out directories
+- WARNING - Back up all files that need to be preserved before 
+- package update or uninstall - WARNING
+- Resolves: rhbz#638914 - update versions of commons-collections,
+- commons-dbcp, and commons-pool
+
+* Thu Oct 07 2010 David Knox <dknox@redhat.com> 0:6.0.26-11
 - resolves rhbz#640837 - tomcat user requires login shell
 
 * Mon Oct 04 2010 David Knox <dknox@redhat.com> 0:6.0.26-10
