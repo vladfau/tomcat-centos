@@ -55,7 +55,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 12%{?dist}
+Release: 13%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -395,6 +395,11 @@ pushd ${RPM_BUILD_ROOT}%{libdir}
 %{__ln_s} %{bindir}/tomcat-juli* .
 popd
 
+# Generate a depmap fragment javax.servlet:servlet-api pointing to 
+# tomcat6-servlet-2.5-api for backwards compatibility
+%add_to_maven_depmap javax.servlet servlet-api %{servletspec} JPP %{name}-servlet-%{servletspec}-api
+mv %{buildroot}%{_mavendepmapfragdir}/%{name} %{buildroot}%{_mavendepmapfragdir}/%{name}-servlet-api 
+
 # Install the maven metadata
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_mavenpomdir}
 pushd %{packdname}/output/dist/src/res/maven
@@ -456,6 +461,7 @@ done
 %post servlet-%{servletspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/servlet.jar servlet \
     %{_javadir}/%{name}-servlet-%{servletspec}-api.jar 20500
+%update_maven_depmap
 
 %post el-%{elspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/elspec.jar elspec \
@@ -499,6 +505,7 @@ fi
 if [ "$1" = "0" ]; then
     %{_sbindir}/update-alternatives --remove servlet \
         %{_javadir}/%{name}-servlet-%{servletspec}-api.jar
+    %update_maven_depmap
 fi
 
 %postun el-%{elspec}-api
@@ -548,7 +555,7 @@ fi
 %{homedir}/work
 %{homedir}/logs
 %{homedir}/conf
-%{_mavendepmapfragdir}/*
+%{_mavendepmapfragdir}/%{name}
 %{_mavenpomdir}/*.pom
 # Exclude the POMs that are in sub-packages
 %exclude %{_mavenpomdir}/*api*
@@ -584,6 +591,7 @@ fi
 %files servlet-%{servletspec}-api
 %defattr(0644,root,root,0755)
 %{_javadir}/%{name}-servlet-%{servletspec}*.jar
+%{_mavendepmapfragdir}/%{name}-servlet-api
 %{_mavenpomdir}/JPP-%{name}-servlet-api.pom
 
 %files el-%{elspec}-api
@@ -600,6 +608,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Tue Nov 9 2010 Chris Spike <chris.spike@arcor.de> 0:6.0.26-13
+- Added javax.servlet:servlet-api depmap entry to servlet-2.5-api subpackage
+
 * Thu Oct 14 2010 David Knox <dknox@redhat.com> 0:6.0.26-12
 - Resolves rhbz#640686 - Upgrade of tomcat6 wipes out directories
 - WARNING - Back up all files that need to be preserved before 
