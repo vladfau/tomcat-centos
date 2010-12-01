@@ -55,7 +55,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 13%{?dist}
+Release: 14%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -439,11 +439,18 @@ done
 %clean
 %{__rm} -rf $RPM_BUILD_ROOT
 
+
 %pre
 # add the tomcat user and group
 %{_sbindir}/groupadd -g %{tcuid} -r tomcat 2>/dev/null || :
 %{_sbindir}/useradd -c "Apache Tomcat" -u %{tcuid} -g tomcat \
     -s /bin/sh -r -d %{homedir} tomcat 2>/dev/null || :
+# Save the conf, app, and lib dirs
+# due to rbgz 640686. Copy them to the _tmppath so we don't pollute 
+# the tomcat file structure
+[ -d %{appdir} ] && %{__cp} -rp %{appdir} %{_tmppath}/%{name}-webapps.bak || :
+[ -d %{confdir} ] && %{__cp} -rp %{confdir} %{_tmppath}/%{name}-confdir.bak || :
+[ -d %{libdir}  ] && %{__cp} -rp %{libdir} %{_tmppath}/%{name}-libdir.bak || :
 
 %post
 # install but don't activate
@@ -472,6 +479,22 @@ done
 # load with a java.io.IOException
 #%{_bindir}/build-jar-repository -p %{appdir}/examples/WEB-INF/lib \
 #    taglibs-core.jar taglibs-standard.jar 2>&1
+
+# move the temporary backups to the correct tomcat directory
+# due to rhbz 640686
+%posttrans
+if [ -d %{_tmppath}/%{name}-webapps.bak ]; then
+  %{__cp} -rp %{_tmppath}/%{name}-webapps.bak/* %{appdir}
+  %{__rm} -rf %{_tmppath}/%{name}-webapps.bak
+fi
+if [ -d %{_tmppath}/%{name}-libdir.bak ]; then
+  %{__cp} -rp %{_tmppath}/%{name}-libdir.bak/* %{libdir}
+  %{__rm} -rf %{_tmppath}/%{name}-libdir.bak
+fi
+if [ -d %{_tmppath}/%{name}-confdir.bak ]; then
+  %{__cp} -rp %{_tmppath}/%{name}-confdir.bak/* %{confdir}
+  %{__rm} -rf %{_tmppath}/%{name}-confdir.bak
+fi
 
 %preun
 # clean tempdir and workdir on removal or upgrade
@@ -608,6 +631,12 @@ fi
 %{appdir}/sample
 
 %changelog
+* Mon Nov 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-14
+- Resolving rhbz 640686: save appdir, confdir, and libdir during
+- pre and copy them back during posttrans. The directories are
+- copied to /var/tmp. They are copied back during posttrans and 
+- removed from /var/tmp.
+
 * Tue Nov 9 2010 Chris Spike <chris.spike@arcor.de> 0:6.0.26-13
 - Added javax.servlet:servlet-api depmap entry to servlet-2.5-api subpackage
 
