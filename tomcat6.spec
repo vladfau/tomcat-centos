@@ -403,37 +403,32 @@ mv %{buildroot}%{_mavendepmapfragdir}/%{name} %{buildroot}%{_mavendepmapfragdir}
 # Install the maven metadata
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_mavenpomdir}
 pushd %{packdname}/output/dist/src/res/maven
-for file in *.pom; do
-   base=`basename $file .pom`
-   # Some POMs don't actually have corresponding jar files in the current RPM
-   if [ $base != 'dbcp' -a $base != 'juli-adapters' -a $base != 'juli-extras' ]; then
-      sed -i 's/@MAVEN.DEPLOY.VERSION@/%{version}/g' $file
-      %{__cp} -a $file ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-%{name}-$file
-      # Some jar files have tomcat6 prepended and some don't, and some have their
-      # canonical home outside of the tomcat6 subdirectory
-      jppdir="JPP/%{name}"
-      if [ $base = 'coyote' -o $base = 'jsp-api' -o $base = 'servlet-api' ]; then
-         jpp="%{name}-$base"
-         jppdir="JPP"
-      else
-         if [ $base = 'tribes' ]; then
-            jpp=catalina-$base
-         else
-            if [ $base = 'juli' -o $base = 'coyote' ]; then
-               jpp=tomcat-$base
-            else
-               jpp=$base
-            fi
-         fi
-      fi
-
-      if [ $base = 'jasper-jdt' ]; then
-         %add_to_maven_depmap org.apache.tomcat $base %{version} JPP ecj 3.4.2
-      else
-         %add_to_maven_depmap org.apache.tomcat $base %{version} $jppdir $jpp %{version}
-      fi
-   fi
+for pom in *.pom; do
+    # fix-up version in all pom files
+    sed -i 's/@MAVEN.DEPLOY.VERSION@/%{version}/g' $pom
 done
+
+# we won't install dbcp, juli-adapters and juli-extras pom files
+for pom in annotations-api.pom catalina.pom jasper-el.pom jasper.pom \
+           catalina-ha.pom el-api.pom jasper-jdt.pom; do
+    %{__cp} -a $pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-$pom
+    base=`basename $pom .pom`
+    %add_to_maven_depmap org.apache.tomcat $base %{version} JPP/%{name} $base
+done
+
+# servlet-api jsp-api and el-api are not in tomcat6 subdir, since they are widely re-used elsewhere
+for pom in jsp-api.pom servlet-api.pom el-api.pom;do
+    %{__cp} -a $pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-%{name}-$pom
+    base=`basename $pom .pom`
+    %add_to_maven_depmap org.apache.tomcat $base %{version} JPP %{name}-$base
+done
+
+# two special pom where jar files have different names
+%{__cp} -a tribes.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-catalina-tribes.pom
+%add_to_maven_depmap org.apache.tomcat tribes %{version} JPP/%{name} catalina-tribes
+
+%{__cp} -a juli.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-juli.pom
+%add_to_maven_depmap org.apache.tomcat juli %{version} JPP/%{name} tomcat-juli
 
 
 %clean
