@@ -106,6 +106,9 @@ Requires(preun):  /lib/lsb/init-functions
 Requires(post):   jpackage-utils
 Requires(postun): jpackage-utils
 
+# added after log4j sub-package was removed
+Provides:         %{name}-log4j = %{epoch}:%{version}-%{release}
+
 %description
 Tomcat is the servlet container that is used in the official Reference
 Implementation for the Java Servlet and JavaServer Pages technologies.
@@ -151,14 +154,6 @@ Requires(postun): %{_sbindir}/update-alternatives
 %description jsp-%{jspspec}-api
 Apache Tomcat JSP API implementation classes.
 
-
-%package log4j
-Group: Internet/WWW/Dynamic Content
-Summary: Log4j support for Apache Tomcat
-Requires: jakarta-commons-logging
-
-%description log4j
-Log4j support for Apache Tomcat
 
 %package lib
 Group: Development/Compilers
@@ -531,6 +526,7 @@ fi
 %config(noreplace) %{confdir}/*.properties
 %config(noreplace) %{confdir}/context.xml
 %config(noreplace) %{confdir}/server.xml
+%config(noreplace) %{confdir}/log4j.properties
 %attr(0664,root,tomcat) %config(noreplace) %{confdir}/tomcat-users.xml
 %config(noreplace) %{confdir}/web.xml
 %attr(0765,tomcat,root) %dir %{cachedir}
@@ -572,12 +568,6 @@ fi
 %defattr(0644,root,root,0755)
 %{_javadir}/%{name}-jsp-%{jspspec}*.jar
 %{_mavenpomdir}/JPP-%{name}-jsp-api.pom
-
-%files log4j
-%defattr(0644,root,tomcat,0775)
-%config(noreplace) %{confdir}/log4j.properties
-%{libdir}/log4j.jar
-%{libdir}/log4j-%{version}.jar
 
 %files lib
 %defattr(0644,root,root,0755)
