@@ -55,7 +55,7 @@
 Name: tomcat6
 Epoch: 0
 Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 14%{?dist}
+Release: 15%{?dist}
 Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group: Networking/Daemons
@@ -360,7 +360,7 @@ pushd ${RPM_BUILD_ROOT}%{libdir}
     %{__ln_s} ../%{name}-el-%{elspec}-api-%{version}.jar
     %{__cp} -p $(build-classpath commons-collections) .
     %{__cp} -p $(build-classpath log4j) .
-    %{__ln_s} log4j log4j-%{version}.jar
+    %{__ln_s} log4j.jar log4j-%{version}.jar
 #    %{__ln_s} $(build-classpath commons-dbcp) .
 #    %{__ln_s} $(build-classpath commons-pool) .
     %{__ln_s} $(build-classpath ecj) jasper-jdt.jar
@@ -631,6 +631,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Thu Dec  2 2010 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:6.0.26-15
+- Fix log4j symlink (Resolves rhbz#654660)
+
 * Mon Nov 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-14
 - Resolving rhbz 640686: save appdir, confdir, and libdir during
 - pre and copy them back during posttrans. The directories are
