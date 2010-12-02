@@ -52,60 +52,58 @@
 %global workdir %{cachedir}/work
 %global _initrddir %{_sysconfdir}/init.d
 
-Name: tomcat6
-Epoch: 0
-Version: %{major_version}.%{minor_version}.%{micro_version}
-Release: 15%{?dist}
-Summary: Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
+Name:          tomcat6
+Epoch:         0
+Version:       %{major_version}.%{minor_version}.%{micro_version}
+Release:       16%{?dist}
+Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
-Group: Networking/Daemons
-License: ASL 2.0
-URL: http://tomcat.apache.org/
-Source0: http://www.apache.org/dist/tomcat/tomcat-6/v%{version}/src/%{packdname}.tar.gz
-Source1: %{name}-%{major_version}.%{minor_version}.conf
-Source2: %{name}-%{major_version}.%{minor_version}.init
-Source3: %{name}-%{major_version}.%{minor_version}.sysconfig
-Source4: %{name}-%{major_version}.%{minor_version}.wrapper
-Source5: %{name}-%{major_version}.%{minor_version}.logrotate
-Source6: %{name}-%{major_version}.%{minor_version}-digest.script
-Source7: %{name}-%{major_version}.%{minor_version}-tool-wrapper.script
-Source8: servlet-api-OSGi-MANIFEST.MF
-Source9: jsp-api-OSGi-MANIFEST.MF
-Source10: %{name}-%{major_version}.%{minor_version}-log4j.properties
-Patch0: %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
-Patch1: %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
-Patch2: %{name}-%{major_version}.%{minor_version}-CVE-2010-2227.patch
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildArch: noarch
+Group:         Networking/Daemons
+License:       ASL 2.0
+URL:           http://tomcat.apache.org/
+Source0:       http://www.apache.org/dist/tomcat/tomcat-6/v%{version}/src/%{packdname}.tar.gz
+Source1:       %{name}-%{major_version}.%{minor_version}.conf
+Source2:       %{name}-%{major_version}.%{minor_version}.init
+Source3:       %{name}-%{major_version}.%{minor_version}.sysconfig
+Source4:       %{name}-%{major_version}.%{minor_version}.wrapper
+Source5:       %{name}-%{major_version}.%{minor_version}.logrotate
+Source6:       %{name}-%{major_version}.%{minor_version}-digest.script
+Source7:       %{name}-%{major_version}.%{minor_version}-tool-wrapper.script
+Source8:       servlet-api-OSGi-MANIFEST.MF
+Source9:       jsp-api-OSGi-MANIFEST.MF
+Source10:      %{name}-%{major_version}.%{minor_version}-log4j.properties
+Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
+Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
+Patch2:        %{name}-%{major_version}.%{minor_version}-CVE-2010-2227.patch
+
+BuildArch:     noarch
+
 BuildRequires: ant
 BuildRequires: ant-nodeps
 BuildRequires: ecj
 BuildRequires: findutils
 BuildRequires: jakarta-commons-collections
-#BuildRequires: jakarta-commons-collections-tomcat5
-BuildRequires: jakarta-commons-daemon
-#BuildRequires: jakarta-commons-dbcp-tomcat5
-#BuildRequires: jakarta-commons-pool-tomcat5
-BuildRequires: jakarta-commons-dbcp
-BuildRequires: jakarta-commons-pool
+BuildRequires: apache-commons-daemon
+BuildRequires: apache-commons-dbcp
+BuildRequires: apache-commons-pool
 BuildRequires: jakarta-taglibs-standard
 BuildRequires: java-1.6.0-devel
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
 BuildRequires: log4j
-Requires(pre): shadow-utils
-Requires(pre): shadow-utils
-Requires: jakarta-commons-daemon
-Requires: jakarta-commons-logging
-Requires: jakarta-commons-collections
-Requires: java-1.6.0
-Requires: procps
-Requires: %{name}-lib = %{epoch}:%{version}-%{release}
-Requires(post): /sbin/chkconfig
-Requires(preun): /sbin/chkconfig
-Requires(post): /lib/lsb/init-functions
-Requires(preun): /lib/lsb/init-functions
-Requires(post): jpackage-utils
+Requires:      apache-commons-daemon
+Requires:      apache-commons-logging
+Requires:      apache-commons-collections
+Requires:      java-1.6.0
+Requires:      procps
+Requires:      %{name}-lib = %{epoch}:%{version}-%{release}
+Requires(pre):    shadow-utils
+Requires(pre):    shadow-utils
+Requires(post):   /sbin/chkconfig
+Requires(preun):  /sbin/chkconfig
+Requires(post):   /lib/lsb/init-functions
+Requires(preun):  /lib/lsb/init-functions
+Requires(post):   jpackage-utils
 Requires(postun): jpackage-utils
 
 %description
@@ -169,9 +167,9 @@ Requires: %{name}-jsp-%{jspspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-el-%{elspec}-api = %{epoch}:%{version}-%{release}
 Requires: ecj
-Requires: jakarta-commons-collections
-Requires: jakarta-commons-dbcp
-Requires: jakarta-commons-pool
+Requires: apache-commons-collections
+Requires: apache-commons-dbcp
+Requires: apache-commons-pool
 Requires(preun): coreutils
 
 %description lib
@@ -227,18 +225,18 @@ export CLASSPATH=
 export OPT_JAR_LIST="ant/ant-nodeps"
 pushd %{packdname}
    # we don't care about the tarballs and we're going to replace
-   # tomcat-dbcp.jar with jakarta-commons-{collections,dbcp,pool}-tomcat5.jar
+   # tomcat-dbcp.jar with apache-commons-{collections,dbcp,pool}-tomcat5.jar
    # so just create a dummy file for later removal
    touch HACK
    # who needs a build.properties file anyway
    %{ant} -Dbase.path="." \
       -Dbuild.compiler="modern" \
-      -Dcommons-collections.jar="$(build-classpath jakarata-commons-collections)" \
-      -Dcommons-daemon.jar="$(build-classpath commons-daemon)" \
+      -Dcommons-collections.jar="$(build-classpath apache-commons-collections)" \
+      -Dcommons-daemon.jar="$(build-classpath apache-commons-daemon)" \
       -Dcommons-daemon.jsvc.tar.gz="HACK" \
       -Djasper-jdt.jar="$(build-classpath ecj)" \
       -Djdt.jar="$(build-classpath ecj)" \
-      -Dtomcat-dbcp.jar="$(build-classpath commons-dbcp)" \
+      -Dtomcat-dbcp.jar="$(build-classpath apache-commons-dbcp)" \
       -Dtomcat-native.tar.gz="HACK" \
       -Dversion="%{version}" \
       -Dversion.build="%{micro_version}"
@@ -339,11 +337,11 @@ pushd ${RPM_BUILD_ROOT}%{_javadir}
 popd
 
 pushd %{packdname}/output/build
-   %{_bindir}/build-jar-repository lib commons-collections \
-    commons-dbcp commons-pool ecj 2>&1
-# need to use -p here with b-j-r otherwise the examples webapp fails to
-# load with a java.io.IOException
-   %{_bindir}/build-jar-repository -p webapps/examples/WEB-INF/lib \
+    %{_bindir}/build-jar-repository lib apache-commons-collections \
+                                        apache-commons-dbcp apache-commons-pool ecj 2>&1
+    # need to use -p here with b-j-r otherwise the examples webapp fails to
+    # load with a java.io.IOException
+    %{_bindir}/build-jar-repository -p webapps/examples/WEB-INF/lib \
     taglibs-core.jar taglibs-standard.jar 2>&1
 popd
 
@@ -456,10 +454,6 @@ done
 %{_sbindir}/update-alternatives --install %{_javadir}/jsp.jar jsp \
     %{_javadir}/%{name}-jsp-%{jspspec}-api.jar 20100
 
-#%post lib
-#%{_bindir}/build-jar-repository %{libdir} commons-collections-tomcat5 \
-#    commons-dbcp-tomcat5 commons-pool-tomcat5 ecj 2>&1
-
 %post servlet-%{servletspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/servlet.jar servlet \
     %{_javadir}/%{name}-servlet-%{servletspec}-api.jar 20500
@@ -469,11 +463,6 @@ done
 %{_sbindir}/update-alternatives --install %{_javadir}/elspec.jar elspec \
    %{_javadir}/%{name}-el-%{elspec}-api.jar 20250
 
-#%post webapps
-# need to use -p here with b-j-r otherwise the examples webapp fails to
-# load with a java.io.IOException
-#%{_bindir}/build-jar-repository -p %{appdir}/examples/WEB-INF/lib \
-#    taglibs-core.jar taglibs-standard.jar 2>&1
 
 # move the temporary backups to the correct tomcat directory
 # due to rhbz 640686
@@ -499,19 +488,9 @@ if [ "$1" = "0" ]; then
     /sbin/chkconfig --del %{name}
 fi
 
-#%preun lib
-#if [ "$1" = "0" ]; then
-#    %{__rm} -f %{libdir}/\[commons-collections-tomcat5\].jar \
-#        %{libdir}/\[commons-dbcp-tomcat5\].jar \
-#        %{libdir}/\[commons-pool-tomcat5\].jar \
-#        %{libdir}/\[ecj\].jar >/dev/null 2>&1
-#fi
 
 %postun
 %update_maven_depmap
-#%{__rm} -rf %{appdir}
-#%{__rm} -rf %{confdir}
-#%{__rm} -rf %{libdir}
 
 %postun jsp-%{jspspec}-api
 if [ "$1" = "0" ]; then
@@ -546,8 +525,6 @@ fi
 %attr(0765,root,tomcat) %dir %{appdir}
 %attr(0765,root,tomcat) %dir %{confdir}
 %attr(0765,root,tomcat) %dir %{confdir}/Catalina
-#%dir %{confdir}
-#%dir %{confdir}/Catalina
 %attr(0765,root,tomcat) %dir %{confdir}/Catalina/localhost
 %config(noreplace) %{confdir}/%{name}.conf
 %config(noreplace) %{confdir}/*.policy
