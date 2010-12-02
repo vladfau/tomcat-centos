@@ -206,7 +206,8 @@ The ROOT and examples web applications for Apache Tomcat.
 %setup -q -c -T -a 0
 # remove pre-built binaries and windows files
 find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "*.gz" -o \
-   -name "*.jar" -o -name "*.war" -o -name "*.zip" \) | xargs -t %{__rm}
+   -name "*.jar" -o -name "*.war" -o -name "*.zip" \) -delete
+
 pushd %{packdname}
 %patch0 -p0
 %patch1 -p0
@@ -240,8 +241,8 @@ pushd %{packdname}
    %{ant} -f dist.xml dist-source
    %{ant} -f dist.xml dist-javadoc
     # remove some jars that we'll replace with symlinks later
-   %{__rm} output/build/bin/commons-daemon.jar \
-      output/build/lib/ecj.jar
+   %{__rm} output/build/bin/apache-commons-daemon.jar \
+           output/build/lib/ecj.jar
     # remove the cruft we created
    %{__rm} output/build/bin/HACK \
       output/build/bin/tomcat-native.tar.gz 
@@ -292,9 +293,8 @@ pushd %{packdname}/output/build
     %{__cp} -a webapps/* ${RPM_BUILD_ROOT}%{appdir}
 popd
 # javadoc
-pushd %{packdname}/output/dist/webapps
-    %{__cp} -a docs/api/* ${RPM_BUILD_ROOT}%{_javadocdir}/%{name}
-popd
+%{__cp} -a %{packdname}/output/dist/webapps/docs/api/* ${RPM_BUILD_ROOT}%{_javadocdir}/%{name}
+
 %{__sed} -e "s|\@\@\@TCHOME\@\@\@|%{homedir}|g" \
    -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
    -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE1} \
@@ -320,15 +320,9 @@ popd
     > ${RPM_BUILD_ROOT}%{_bindir}/%{name}-tool-wrapper
 # create jsp and servlet API symlinks
 pushd ${RPM_BUILD_ROOT}%{_javadir}
-   %{__mv} %{name}/jsp-api.jar %{name}-jsp-%{jspspec}-api-%{version}.jar
-   %{__mv} %{name}/servlet-api.jar \
-      %{name}-servlet-%{servletspec}-api-%{version}.jar
-   %{__mv} %{name}/el-api.jar %{name}-el-%{elspec}-api-%{version}.jar
-   %{__ln_s} %{name}-jsp-%{jspspec}-api-%{version}.jar \
-      %{name}-jsp-%{jspspec}-api.jar
-   %{__ln_s} %{name}-servlet-%{servletspec}-api-%{version}.jar \
-      %{name}-servlet-%{servletspec}-api.jar
-   %{__ln_s} %{name}-el-%{elspec}-api-%{version}.jar %{name}-el-%{elspec}-api.jar
+   %{__mv} %{name}/jsp-api.jar %{name}-jsp-%{jspspec}-api.jar
+   %{__mv} %{name}/servlet-api.jar %{name}-servlet-%{servletspec}-api.jar
+   %{__mv} %{name}/el-api.jar %{name}-el-%{elspec}-api.jar
 popd
 
 pushd %{packdname}/output/build
@@ -341,31 +335,19 @@ pushd %{packdname}/output/build
 popd
 
 pushd ${RPM_BUILD_ROOT}%{libdir}
-   # fix up jars to include version number
-   for i in *.jar; do
-      j="$(echo $i | %{__sed} -e 's,\.jar$,,')"
-      %{__mv} ${j}.jar ${j}-%{version}.jar
-      %{__ln_s} ${j}-%{version}.jar ${j}.jar
-    done
     # symlink JSP and servlet API jars
-    %{__ln_s} ../%{name}-jsp-%{jspspec}-api-%{version}.jar .
-    %{__ln_s} ../%{name}-servlet-%{servletspec}-api-%{version}.jar .
-    %{__ln_s} ../%{name}-el-%{elspec}-api-%{version}.jar
-    %{__cp} -p $(build-classpath commons-collections) .
-    %{__cp} -p $(build-classpath log4j) .
-    %{__ln_s} log4j.jar log4j-%{version}.jar
-#    %{__ln_s} $(build-classpath commons-dbcp) .
-#    %{__ln_s} $(build-classpath commons-pool) .
+    %{__ln_s} ../%{name}-jsp-%{jspspec}-api.jar .
+    %{__ln_s} ../%{name}-servlet-%{servletspec}-api.jar .
+    %{__ln_s} ../%{name}-el-%{elspec}-api.jar
+    %{__ln_s} $(build-classpath apache-commons-collections) commons-collections.jar
+    %{__ln_s} $(build-classpath apache-commons-dbcp) commons-dbcp.jar
+    %{__ln_s} $(build-classpath log4j) log4j.jar
     %{__ln_s} $(build-classpath ecj) jasper-jdt.jar
+
+    # Link the juli jar into /usr/share/java/tomcat6
+    %{__ln_s} %{bindir}/tomcat-juli.jar .
 popd
-pushd ${RPM_BUILD_ROOT}%{bindir}
-   # fix up jars to include version number
-   for i in *.jar; do
-      j="$(echo $i | %{__sed} -e 's,\.jar$,,')"
-      %{__mv} ${j}.jar ${j}-%{version}.jar
-      %{__ln_s} ${j}-%{version}.jar ${j}.jar
-   done
-popd
+
 # symlink to the FHS locations where we've installed things
 pushd ${RPM_BUILD_ROOT}%{homedir}
     %{__ln_s} %{appdir} webapps
@@ -383,10 +365,6 @@ pushd ${RPM_BUILD_ROOT}%{appdir}/sample
 popd
 %{__rm} ${RPM_BUILD_ROOT}%{appdir}/docs/appdev/sample/sample.war
 
-# Link the juli jars into /usr/share/java/tomcat6
-pushd ${RPM_BUILD_ROOT}%{libdir}
-%{__ln_s} %{bindir}/tomcat-juli* .
-popd
 
 # Generate a depmap fragment javax.servlet:servlet-api pointing to 
 # tomcat6-servlet-2.5-api for backwards compatibility
@@ -507,7 +485,7 @@ if [ "$1" = "0" ]; then
 fi
 
 %files
-%defattr(0644,root,tomcat,0775)
+%defattr(-,root,tomcat,-)
 %doc %{packdname}/{LICENSE,NOTICE,RELEASE*}
 %attr(0755,root,root) %{_bindir}/%{name}-digest
 %attr(0755,root,root) %{_bindir}/%{name}-tool-wrapper
@@ -534,11 +512,8 @@ fi
 %attr(0765,tomcat,root) %dir %{workdir}
 %attr(0765,root,tomcat) %dir %{logdir}
 %dir %{homedir}
-#%attr(0765,root,tomcat) %{homedir}/conf
-%{bindir}/bootstrap-%{version}.jar
 %{bindir}/bootstrap.jar
 %{bindir}/catalina-tasks.xml
-%{bindir}/tomcat-juli-%{version}.jar
 %{bindir}/tomcat-juli.jar
 %{homedir}/lib
 %{homedir}/temp
@@ -552,42 +527,42 @@ fi
 %exclude %{_mavenpomdir}/*api*
 
 %files admin-webapps
-%defattr(0644,root,root,0775)
+%defattr(-,root,root,-)
 %{appdir}/host-manager
 %{appdir}/manager
 
 %files docs-webapp
-%defattr(0644,root,root,0755)
+%defattr(-,root,root,-)
 %{appdir}/docs
 
 %files javadoc
-%defattr(0644,root,root,0755)
+%defattr(-,root,root,-)
 %{_javadocdir}/%{name}
 
 %files jsp-%{jspspec}-api
-%defattr(0644,root,root,0755)
+%defattr(-,root,root,-)
 %{_javadir}/%{name}-jsp-%{jspspec}*.jar
 %{_mavenpomdir}/JPP-%{name}-jsp-api.pom
 
 %files lib
-%defattr(0644,root,root,0755)
+%defattr(-,root,root,-)
 %{libdir}
 
 %files servlet-%{servletspec}-api
-%defattr(0644,root,root,0755)
+%defattr(-,root,root,-)
 %{_javadir}/%{name}-servlet-%{servletspec}*.jar
 %{_mavendepmapfragdir}/%{name}-servlet-api
 %{_mavenpomdir}/JPP-%{name}-servlet-api.pom
 
 %files el-%{elspec}-api
-%defattr(0665,root,root,0755)
-%{_javadir}/%{name}-el-%{elspec}-api-%{version}.jar
+%defattr(-,root,root,-)
 %{_javadir}/%{name}-el-%{elspec}-api.jar
-%{_javadir}/%{name}/%{name}-el-%{elspec}-api-%{version}.jar
+%{_javadir}/%{name}-el-%{elspec}-api.jar
+%{_javadir}/%{name}/%{name}-el-%{elspec}-api.jar
 %{_mavenpomdir}/JPP-%{name}-el-api.pom
 
 %files webapps
-%defattr(0644,root,tomcat,0775)
+%defattr(-,root,tomcat,-)
 %{appdir}/ROOT
 %{appdir}/examples
 %{appdir}/sample
