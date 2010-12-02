@@ -568,6 +568,12 @@ fi
 %{appdir}/sample
 
 %changelog
+* Thu Dec  2 2010 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:6.0.26-16
+- Fixes according to guidelines (versionless jars, no random defattrs)
+- Simplify pom installation by splitting to more steps
+- Formatting cleanups
+- Removed log4j subpackage (used bundled log4j, replaced by symlink)
+
 * Thu Dec  2 2010 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:6.0.26-15
 - Fix log4j symlink (Resolves rhbz#654660)
 
