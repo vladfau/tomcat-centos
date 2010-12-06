@@ -55,7 +55,7 @@
 Name:          tomcat6
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       16%{?dist}
+Release:       17%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -369,7 +369,9 @@ popd
 # Generate a depmap fragment javax.servlet:servlet-api pointing to 
 # tomcat6-servlet-2.5-api for backwards compatibility
 %add_to_maven_depmap javax.servlet servlet-api %{servletspec} JPP %{name}-servlet-%{servletspec}-api
-mv %{buildroot}%{_mavendepmapfragdir}/%{name} %{buildroot}%{_mavendepmapfragdir}/%{name}-servlet-api 
+# also provide jetty depmap (originally in jetty package, but it's cleaner to have it here)
+%add_to_maven_depmap org.mortbay.jetty servlet-api %{servletspec} JPP %{name}-servlet-%{servletspec}-api
+mv %{buildroot}%{_mavendepmapfragdir}/%{name} %{buildroot}%{_mavendepmapfragdir}/%{name}-servlet-api
 
 # Install the maven metadata
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_mavenpomdir}
@@ -568,6 +570,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Mon Dec  6 2010 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:6.0.26-17
+- Add jetty to servlet-api depmap
+
 * Thu Dec  2 2010 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:6.0.26-16
 - Fixes according to guidelines (versionless jars, no random defattrs)
 - Simplify pom installation by splitting to more steps
