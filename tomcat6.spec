@@ -55,7 +55,7 @@
 Name:          tomcat6
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       17%{?dist}
+Release:       18%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -245,7 +245,7 @@ pushd %{packdname}
            output/build/lib/ecj.jar
     # remove the cruft we created
    %{__rm} output/build/bin/HACK \
-      output/build/bin/tomcat-native.tar.gz 
+      output/build/bin/tomcat-native.tar.gz
 popd
 pushd %{packdname}/output/dist/src/webapps/docs/appdev/sample/src
 %{__mkdir_p} ../web/WEB-INF/classes
@@ -265,7 +265,6 @@ touch META-INF/MANIFEST.MF
 zip -u %{packdname}/output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
 
 %install
-%{__rm} -rf $RPM_BUILD_ROOT
 # build initial path structure
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_bindir}
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_sbindir}
@@ -321,8 +320,11 @@ popd
 # create jsp and servlet API symlinks
 pushd ${RPM_BUILD_ROOT}%{_javadir}
    %{__mv} %{name}/jsp-api.jar %{name}-jsp-%{jspspec}-api.jar
+   %{__ln_s} %{name}-jsp-%{jspspec}-api.jar %{name}-jsp-api.jar
    %{__mv} %{name}/servlet-api.jar %{name}-servlet-%{servletspec}-api.jar
+   %{__ln_s} %{name}-servlet-%{servletspec}-api.jar %{name}-servlet-api.jar
    %{__mv} %{name}/el-api.jar %{name}-el-%{elspec}-api.jar
+   %{__ln_s} %{name}-el-%{elspec}-api.jar %{name}-el-api.jar
 popd
 
 pushd %{packdname}/output/build
@@ -338,7 +340,7 @@ pushd ${RPM_BUILD_ROOT}%{libdir}
     # symlink JSP and servlet API jars
     %{__ln_s} ../%{name}-jsp-%{jspspec}-api.jar .
     %{__ln_s} ../%{name}-servlet-%{servletspec}-api.jar .
-    %{__ln_s} ../%{name}-el-%{elspec}-api.jar
+    %{__ln_s} ../%{name}-el-%{elspec}-api.jar .
     %{__ln_s} $(build-classpath apache-commons-collections) commons-collections.jar
     %{__ln_s} $(build-classpath apache-commons-dbcp) commons-dbcp.jar
     %{__ln_s} $(build-classpath log4j) log4j.jar
@@ -366,7 +368,7 @@ popd
 %{__rm} ${RPM_BUILD_ROOT}%{appdir}/docs/appdev/sample/sample.war
 
 
-# Generate a depmap fragment javax.servlet:servlet-api pointing to 
+# Generate a depmap fragment javax.servlet:servlet-api pointing to
 # tomcat6-servlet-2.5-api for backwards compatibility
 %add_to_maven_depmap javax.servlet servlet-api %{servletspec} JPP %{name}-servlet-%{servletspec}-api
 # also provide jetty depmap (originally in jetty package, but it's cleaner to have it here)
@@ -404,17 +406,13 @@ done
 %add_to_maven_depmap org.apache.tomcat juli %{version} JPP/%{name} tomcat-juli
 
 
-%clean
-%{__rm} -rf $RPM_BUILD_ROOT
-
-
 %pre
 # add the tomcat user and group
 %{_sbindir}/groupadd -g %{tcuid} -r tomcat 2>/dev/null || :
 %{_sbindir}/useradd -c "Apache Tomcat" -u %{tcuid} -g tomcat \
     -s /bin/sh -r -d %{homedir} tomcat 2>/dev/null || :
 # Save the conf, app, and lib dirs
-# due to rbgz 640686. Copy them to the _tmppath so we don't pollute 
+# due to rbgz 640686. Copy them to the _tmppath so we don't pollute
 # the tomcat file structure
 [ -d %{appdir} ] && %{__cp} -rp %{appdir} %{_tmppath}/%{name}-webapps.bak || :
 [ -d %{confdir} ] && %{__cp} -rp %{confdir} %{_tmppath}/%{name}-confdir.bak || :
@@ -544,6 +542,7 @@ fi
 %files jsp-%{jspspec}-api
 %defattr(-,root,root,-)
 %{_javadir}/%{name}-jsp-%{jspspec}*.jar
+%{_javadir}/%{name}-jsp-api.jar
 %{_mavenpomdir}/JPP-%{name}-jsp-api.pom
 
 %files lib
@@ -553,13 +552,14 @@ fi
 %files servlet-%{servletspec}-api
 %defattr(-,root,root,-)
 %{_javadir}/%{name}-servlet-%{servletspec}*.jar
+%{_javadir}/%{name}-servlet-api.jar
 %{_mavendepmapfragdir}/%{name}-servlet-api
 %{_mavenpomdir}/JPP-%{name}-servlet-api.pom
 
 %files el-%{elspec}-api
 %defattr(-,root,root,-)
 %{_javadir}/%{name}-el-%{elspec}-api.jar
-%{_javadir}/%{name}-el-%{elspec}-api.jar
+%{_javadir}/%{name}-el-api.jar
 %{_javadir}/%{name}/%{name}-el-%{elspec}-api.jar
 %{_mavenpomdir}/JPP-%{name}-el-api.pom
 
@@ -570,6 +570,11 @@ fi
 %{appdir}/sample
 
 %changelog
+* Wed Dec  8 2010 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:6.0.26-18
+- Add api jars without spec version symlinks
+- Remove clean section
+- Remove whitespaces at the EOLs
+
 * Mon Dec  6 2010 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:6.0.26-17
 - Add jetty to servlet-api depmap
 
@@ -585,7 +590,7 @@ fi
 * Mon Nov 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-14
 - Resolving rhbz 640686: save appdir, confdir, and libdir during
 - pre and copy them back during posttrans. The directories are
-- copied to /var/tmp. They are copied back during posttrans and 
+- copied to /var/tmp. They are copied back during posttrans and
 - removed from /var/tmp.
 
 * Tue Nov 9 2010 Chris Spike <chris.spike@arcor.de> 0:6.0.26-13
@@ -593,7 +598,7 @@ fi
 
 * Thu Oct 14 2010 David Knox <dknox@redhat.com> 0:6.0.26-12
 - Resolves rhbz#640686 - Upgrade of tomcat6 wipes out directories
-- WARNING - Back up all files that need to be preserved before 
+- WARNING - Back up all files that need to be preserved before
 - package update or uninstall - WARNING
 - Resolves: rhbz#638914 - update versions of commons-collections,
 - commons-dbcp, and commons-pool
@@ -602,15 +607,15 @@ fi
 - resolves rhbz#640837 - tomcat user requires login shell
 
 * Mon Oct 04 2010 David Knox <dknox@redhat.com> 0:6.0.26-10
-- ant-nodeps is breaking the build. Put ant-nodeps on the 
+- ant-nodeps is breaking the build. Put ant-nodeps on the
 - OPT_JAR_LIST
 
 * Fri Oct 01 2010 David Knox <dknox@rehat.com> 0:6.0.26-9
-- Resolves rhbz#575341 - Additionally created instances of Tomcat 
+- Resolves rhbz#575341 - Additionally created instances of Tomcat
 - are broken
 
 * Fri Jul 02 2010 David Knox <dknox@rehat.com> 0:6.0.26-8
-- LSB initscript compliance 
+- LSB initscript compliance
 
 * Thu Jul 01 2010 David Knox <dknox@redhat.com> 0:6.0.26-7
 - Made elspec the standard for elspec %post and %postun.
@@ -623,7 +628,7 @@ fi
 - Working on 589145. Tomcat can't find java compiler for java.
 
 * Tue Apr 08 2010 David Knox <dknox@redhat.com> 0:6.0.26-4
-- Moved build-jar-repository to later in the install process.  
+- Moved build-jar-repository to later in the install process.
 
 * Tue Apr 06 2010 David Knox <dknox@redhat.com> 0:6.0.26-3
 - Incremented the Release tag to 3 to avoid any confusion about which
@@ -636,7 +641,7 @@ fi
 
 * Mon Mar 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-2
 - Update source to tomcat6.0.26
-- Bugzilla 572357 - Please retest. 
+- Bugzilla 572357 - Please retest.
 - OSGi manifests for servlet-api and jsp-api
 
 
@@ -651,7 +656,7 @@ fi
 - Drop file requires on /usr/share/java/ecj.jar.
 
 * Mon Nov 9 2009 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.20-1
-- Update to 6.0.20. Fixes CVE-2009-0033,CVE-2009-0580. 
+- Update to 6.0.20. Fixes CVE-2009-0033,CVE-2009-0580.
 
 * Sun Jul 26 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:6.0.18-10.2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
