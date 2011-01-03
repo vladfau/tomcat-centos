@@ -28,12 +28,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-%global section free
-
 %global jspspec 2.1
 %global major_version 6
 %global minor_version 0
-%global micro_version 26
+%global micro_version 29
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 2.5
 %global elspec 2.1
@@ -55,7 +53,7 @@
 Name:          tomcat6
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       18%{?dist}
+Release:       1%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -74,7 +72,6 @@ Source9:       jsp-api-OSGi-MANIFEST.MF
 Source10:      %{name}-%{major_version}.%{minor_version}-log4j.properties
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
-Patch2:        %{name}-%{major_version}.%{minor_version}-CVE-2010-2227.patch
 
 BuildArch:     noarch
 
@@ -99,10 +96,10 @@ Requires:      procps
 Requires:      %{name}-lib = %{epoch}:%{version}-%{release}
 Requires(pre):    shadow-utils
 Requires(pre):    shadow-utils
-Requires(post):   /sbin/chkconfig
-Requires(preun):  /sbin/chkconfig
-Requires(post):   /lib/lsb/init-functions
-Requires(preun):  /lib/lsb/init-functions
+Requires(post):   chkconfig
+Requires(preun):  chkconfig
+Requires(post):   redhat-lsb
+Requires(preun):  redhat-lsb
 Requires(post):   jpackage-utils
 Requires(postun): jpackage-utils
 
@@ -148,8 +145,8 @@ Summary: Apache Tomcat JSP API implementation classes
 Provides: jsp = %{jspspec}
 Provides: jsp21
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
-Requires(post): %{_sbindir}/update-alternatives
-Requires(postun): %{_sbindir}/update-alternatives
+Requires(post): chkconfig
+Requires(postun): chkconfig
 
 %description jsp-%{jspspec}-api
 Apache Tomcat JSP API implementation classes.
@@ -176,8 +173,8 @@ Summary: Apache Tomcat Servlet API implementation classes
 Provides: servlet = %{servletspec}
 Provides: servlet6
 Provides: servlet25
-Requires(post): %{_sbindir}/update-alternatives
-Requires(postun): %{_sbindir}/update-alternatives
+Requires(post): chkconfig
+Requires(postun): chkconfig
 
 %description servlet-%{servletspec}-api
 Apache Tomcat Servlet API implementation classes.
@@ -187,8 +184,8 @@ Group: Development/Libraries/Java
 Summary: Expression Language v1.0 API
 Provides: el_1_0_api = %{epoch}:%{version}-%{release}
 Provides: el_api = %{elspec}
-Requires(post): %{_sbindir}/update-alternatives
-Requires(postun): %{_sbindir}/update-alternatives
+Requires(post): chkconfig
+Requires(postun): chkconfig
 
 %description el-%{elspec}-api
 Expression Language 1.0.
@@ -203,23 +200,18 @@ Requires: jakarta-taglibs-standard >= 0:1.1
 The ROOT and examples web applications for Apache Tomcat.
 
 %prep
-%setup -q -c -T -a 0
+%setup -q -n %{packdname}
 # remove pre-built binaries and windows files
 find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "*.gz" -o \
    -name "*.jar" -o -name "*.war" -o -name "*.zip" \) -delete
 
-pushd %{packdname}
 %patch0 -p0
 %patch1 -p0
-%patch2 -p0
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
-popd
 
 %build
-export CLASSPATH=
-export OPT_JAR_LIST="ant/ant-nodeps"
-pushd %{packdname}
+export OPT_JAR_LIST="xalan-j2-serializer"
    # we don't care about the tarballs and we're going to replace
    # tomcat-dbcp.jar with apache-commons-{collections,dbcp,pool}-tomcat5.jar
    # so just create a dummy file for later removal
@@ -229,7 +221,7 @@ pushd %{packdname}
       -Dbuild.compiler="modern" \
       -Dcommons-collections.jar="$(build-classpath apache-commons-collections)" \
       -Dcommons-daemon.jar="$(build-classpath apache-commons-daemon)" \
-      -Dcommons-daemon.jsvc.tar.gz="HACK" \
+      -Dcommons-daemon.native.src.tgz="HACK" \
       -Djasper-jdt.jar="$(build-classpath ecj)" \
       -Djdt.jar="$(build-classpath ecj)" \
       -Dtomcat-dbcp.jar="$(build-classpath apache-commons-dbcp)" \
@@ -241,13 +233,11 @@ pushd %{packdname}
    %{ant} -f dist.xml dist-source
    %{ant} -f dist.xml dist-javadoc
     # remove some jars that we'll replace with symlinks later
-   %{__rm} output/build/bin/apache-commons-daemon.jar \
+   %{__rm} output/build/bin/commons-daemon.jar \
            output/build/lib/ecj.jar
     # remove the cruft we created
-   %{__rm} output/build/bin/HACK \
-      output/build/bin/tomcat-native.tar.gz
-popd
-pushd %{packdname}/output/dist/src/webapps/docs/appdev/sample/src
+   %{__rm} output/build/bin/tomcat-native.tar.gz
+pushd output/dist/src/webapps/docs/appdev/sample/src
 %{__mkdir_p} ../web/WEB-INF/classes
 %{javac} -cp ../../../../../../../../output/build/lib/servlet-api.jar -d ../web/WEB-INF/classes mypackage/Hello.java
 pushd ../web
@@ -259,10 +249,10 @@ popd
 mkdir -p META-INF
 cp -p %{SOURCE8} META-INF/MANIFEST.MF
 touch META-INF/MANIFEST.MF
-zip -u %{packdname}/output/build/lib/servlet-api.jar META-INF/MANIFEST.MF
+zip -u output/build/lib/servlet-api.jar META-INF/MANIFEST.MF
 cp -p %{SOURCE9} META-INF/MANIFEST.MF
 touch META-INF/MANIFEST.MF
-zip -u %{packdname}/output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
+zip -u output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
 
 %install
 # build initial path structure
@@ -284,7 +274,7 @@ zip -u %{packdname}/output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
 
 # move things into place
 # First copy supporting libs to tomcat lib
-pushd %{packdname}/output/build
+pushd output/build
     %{__cp} -a bin/*.{jar,xml} ${RPM_BUILD_ROOT}%{bindir}
     %{__cp} %{SOURCE10} conf/log4j.properties
     %{__cp} -a conf/*.{policy,properties,xml} ${RPM_BUILD_ROOT}%{confdir}
@@ -292,7 +282,7 @@ pushd %{packdname}/output/build
     %{__cp} -a webapps/* ${RPM_BUILD_ROOT}%{appdir}
 popd
 # javadoc
-%{__cp} -a %{packdname}/output/dist/webapps/docs/api/* ${RPM_BUILD_ROOT}%{_javadocdir}/%{name}
+%{__cp} -a output/dist/webapps/docs/api/* ${RPM_BUILD_ROOT}%{_javadocdir}/%{name}
 
 %{__sed} -e "s|\@\@\@TCHOME\@\@\@|%{homedir}|g" \
    -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
@@ -327,7 +317,7 @@ pushd ${RPM_BUILD_ROOT}%{_javadir}
    %{__ln_s} %{name}-el-%{elspec}-api.jar %{name}-el-api.jar
 popd
 
-pushd %{packdname}/output/build
+pushd output/build
     %{_bindir}/build-jar-repository lib apache-commons-collections \
                                         apache-commons-dbcp apache-commons-pool ecj 2>&1
     # need to use -p here with b-j-r otherwise the examples webapp fails to
@@ -377,7 +367,7 @@ mv %{buildroot}%{_mavendepmapfragdir}/%{name} %{buildroot}%{_mavendepmapfragdir}
 
 # Install the maven metadata
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_mavenpomdir}
-pushd %{packdname}/output/dist/src/res/maven
+pushd output/dist/src/res/maven
 for pom in *.pom; do
     # fix-up version in all pom files
     sed -i 's/@MAVEN.DEPLOY.VERSION@/%{version}/g' $pom
@@ -486,7 +476,7 @@ fi
 
 %files
 %defattr(-,root,tomcat,-)
-%doc %{packdname}/{LICENSE,NOTICE,RELEASE*}
+%doc {LICENSE,NOTICE,RELEASE*}
 %attr(0755,root,root) %{_bindir}/%{name}-digest
 %attr(0755,root,root) %{_bindir}/%{name}-tool-wrapper
 %attr(0755,root,root) %{_sbindir}/d%{name}
@@ -570,6 +560,11 @@ fi
 %{appdir}/sample
 
 %changelog
+* Mon Jan 3 2011 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.29-1
+- Update to new upstream.
+- Simplify buildroot.
+- Don't require files but packages.
+
 * Wed Dec  8 2010 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:6.0.26-18
 - Add api jars without spec version symlinks
 - Remove clean section
