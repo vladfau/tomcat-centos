@@ -43,15 +43,15 @@ else
     SU="/bin/su -s /bin/sh"
 fi
 
-# Get the tomcat config (use this for environment specific settings)
-TOMCAT_CFG="/etc/tomcat6/tomcat6.conf"
-if [ -r "$TOMCAT_CFG" ]; then
-    . $TOMCAT_CFG
-fi
-
 # Get instance specific config file
 if [ -r "/etc/sysconfig/${NAME}" ]; then
     . /etc/sysconfig/${NAME}
+fi
+
+# Get the tomcat config (use this for environment specific settings)
+TOMCAT_CFG="${CATALINA_HOME}/conf/tomcat6.conf"
+if [ -r "$TOMCAT_CFG" ]; then
+    . $TOMCAT_CFG
 fi
 
 # Define which connector port to use
@@ -67,7 +67,7 @@ TOMCAT_PROG="${NAME}"
 TOMCAT_USER="${TOMCAT_USER:-tomcat}"
 
 # Define the tomcat log file
-TOMCAT_LOG="${TOMCAT_LOG:-/var/log/tomcat6/catalina.out}"
+TOMCAT_LOG="${TOMCAT_LOG:-${CATALINA_HOME}/logs/catalina.out}"
 
 RETVAL="0"
 

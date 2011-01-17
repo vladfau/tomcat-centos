@@ -53,7 +53,7 @@
 Name:          tomcat6
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -560,6 +560,12 @@ fi
 %{appdir}/sample
 
 %changelog
+* Mon Jan 17 2011 David Knox <dknox@redhat.com> 0:6.0.29-2
+- Resolves: rhbz# 669969 - tomcat-jdbc missing
+- Resolves problem with multiple instances of tomcat services. References to 
+- hardcoded directory locations have been changed to ${CATALINA_HOME]
+- to avoid confusion
+
 * Mon Jan 3 2011 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.29-1
 - Update to new upstream.
 - Simplify buildroot.
