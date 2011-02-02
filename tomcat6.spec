@@ -53,7 +53,7 @@
 Name:          tomcat6
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       3%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -72,7 +72,7 @@ Source9:       jsp-api-OSGi-MANIFEST.MF
 Source10:      %{name}-%{major_version}.%{minor_version}-log4j.properties
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
-
+Patch2:        %{name}-%{major_version}.%{minor_version}-rhbz-674601.patch
 BuildArch:     noarch
 
 BuildRequires: ant
@@ -207,6 +207,7 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 
 %patch0 -p0
 %patch1 -p0
+%patch2 -p0
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
 
@@ -560,6 +561,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Wed Feb 2 2011 David Knox <dknox@redhat.com> 0:6.0.29-3
+- Resolves rhbz# 674601 - JDK Double.parseDouble DoS
+
 * Mon Jan 17 2011 David Knox <dknox@redhat.com> 0:6.0.29-2
 - Resolves: rhbz# 669969 - tomcat-jdbc missing
 - Resolves problem with multiple instances of tomcat services. References to 
