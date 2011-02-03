@@ -31,7 +31,7 @@
 %global jspspec 2.1
 %global major_version 6
 %global minor_version 0
-%global micro_version 29
+%global micro_version 30
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 2.5
 %global elspec 2.1
@@ -53,7 +53,7 @@
 Name:          tomcat6
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       3%{?dist}
+Release:       1%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -376,7 +376,7 @@ done
 
 # we won't install dbcp, juli-adapters and juli-extras pom files
 for pom in annotations-api.pom catalina.pom jasper-el.pom jasper.pom \
-           catalina-ha.pom el-api.pom jasper-jdt.pom; do
+           catalina-ha.pom el-api.pom; do
     %{__cp} -a $pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-$pom
     base=`basename $pom .pom`
     %add_to_maven_depmap org.apache.tomcat $base %{version} JPP/%{name} $base
@@ -561,6 +561,10 @@ fi
 %{appdir}/sample
 
 %changelog
+* Thu Feb 3 2011 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.30-1
+- Update to 6.0.30.
+- Drop jdt-core.pom which is gone upstream now.
+
 * Wed Feb 2 2011 David Knox <dknox@redhat.com> 0:6.0.29-3
 - Resolves rhbz# 674601 - JDK Double.parseDouble DoS
 
