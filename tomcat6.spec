@@ -53,7 +53,7 @@
 Name:          tomcat6
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -561,6 +561,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Wed Feb 09 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:6.0.30-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
+
 * Thu Feb 3 2011 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.30-1
 - Update to 6.0.30.
 - Drop jdt-core.pom which is gone upstream now.
