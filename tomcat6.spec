@@ -566,6 +566,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Mon Feb 28 2011 David Knox <dknox@redhat.com> 0:6.0.32-2
+- Resolves rhbz 640134 - setting JAVA_HOME
+
 * Mon Feb 28 2011 David Knox <dknox@redhat.com> 0:6.0.32-1
 - Rebase on 6.0.32 with several bug fixes and security fixes
 - changed apache-commons to jakarta-commons to fix missing
