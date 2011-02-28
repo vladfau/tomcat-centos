@@ -31,7 +31,7 @@
 %global jspspec 2.1
 %global major_version 6
 %global minor_version 0
-%global micro_version 30
+%global micro_version 32
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 2.5
 %global elspec 2.1
@@ -72,7 +72,8 @@ Source9:       jsp-api-OSGi-MANIFEST.MF
 Source10:      %{name}-%{major_version}.%{minor_version}-log4j.properties
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
-Patch2:        %{name}-%{major_version}.%{minor_version}-rhbz-674601.patch
+# In 6.0.32 source
+#Patch2:        %{name}-%{major_version}.%{minor_version}-rhbz-674601.patch
 BuildArch:     noarch
 
 BuildRequires: ant
@@ -80,17 +81,19 @@ BuildRequires: ant-nodeps
 BuildRequires: ecj
 BuildRequires: findutils
 BuildRequires: jakarta-commons-collections
-BuildRequires: apache-commons-daemon
-BuildRequires: apache-commons-dbcp
-BuildRequires: apache-commons-pool
+BuildRequires: jakarta-commons-daemon
+BuildRequires: jakarta-commons-dbcp
+BuildRequires: jakarta-commons-pool
 BuildRequires: jakarta-taglibs-standard
 BuildRequires: java-1.6.0-devel
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
 BuildRequires: log4j
-Requires:      apache-commons-daemon
-Requires:      apache-commons-logging
-Requires:      apache-commons-collections
+Requires:      jakarta-commons-daemon
+Requires:      jakarta-commons-logging
+Requires:      jakarta-commons-collections
+Requires:      jakarta-commons-dbcp
+Requires:      jakarta-commons-pool
 Requires:      java-1.6.0
 Requires:      procps
 Requires:      %{name}-lib = %{epoch}:%{version}-%{release}
@@ -159,9 +162,9 @@ Requires: %{name}-jsp-%{jspspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-el-%{elspec}-api = %{epoch}:%{version}-%{release}
 Requires: ecj
-Requires: apache-commons-collections
-Requires: apache-commons-dbcp
-Requires: apache-commons-pool
+Requires: jakarta-commons-collections
+Requires: jakarta-commons-dbcp
+Requires: jakarta-commons-pool
 Requires(preun): coreutils
 
 %description lib
@@ -207,7 +210,7 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 
 %patch0 -p0
 %patch1 -p0
-%patch2 -p0
+# %patch2 -p0
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
 
@@ -269,6 +272,8 @@ zip -u output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{confdir}/Catalina/localhost
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{libdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{logdir}
+/bin/touch ${RPM_BUILD_ROOT}%{logdir}/catalina.out
+chmod 775 ${RPM_BUILD__ROOT}%{logdir}/catalina.out
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{homedir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{tempdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{workdir}
@@ -476,7 +481,7 @@ if [ "$1" = "0" ]; then
 fi
 
 %files
-%defattr(-,root,tomcat,-)
+%defattr(-,root,tomcat,0775)
 %doc {LICENSE,NOTICE,RELEASE*}
 %attr(0755,root,root) %{_bindir}/%{name}-digest
 %attr(0755,root,root) %{_bindir}/%{name}-tool-wrapper
@@ -486,22 +491,23 @@ fi
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %attr(0765,root,tomcat) %dir %{basedir}
-%attr(0765,root,tomcat) %dir %{appdir}
-%attr(0765,root,tomcat) %dir %{confdir}
-%attr(0765,root,tomcat) %dir %{confdir}/Catalina
-%attr(0765,root,tomcat) %dir %{confdir}/Catalina/localhost
+%attr(0775,tomcat,root) %dir %{appdir}
+%attr(0775,tomcat,root) %dir %{confdir}
+%attr(0775,tomcat,root) %dir %{confdir}/Catalina
+%attr(0775,tomcat,root) %dir %{confdir}/Catalina/localhost
 %config(noreplace) %{confdir}/%{name}.conf
 %config(noreplace) %{confdir}/*.policy
 %config(noreplace) %{confdir}/*.properties
 %config(noreplace) %{confdir}/context.xml
 %config(noreplace) %{confdir}/server.xml
 %config(noreplace) %{confdir}/log4j.properties
-%attr(0664,root,tomcat) %config(noreplace) %{confdir}/tomcat-users.xml
+%attr(0664,tomcat,root) %config(noreplace) %{confdir}/tomcat-users.xml
 %config(noreplace) %{confdir}/web.xml
 %attr(0765,tomcat,root) %dir %{cachedir}
 %attr(0765,tomcat,root) %dir %{tempdir}
 %attr(0765,tomcat,root) %dir %{workdir}
-%attr(0765,root,tomcat) %dir %{logdir}
+%attr(0775,tomcat,root) %dir %{logdir}
+%attr(0664,tomcat,tomcat) %{logdir}/catalina.out
 %dir %{homedir}
 %{bindir}/bootstrap.jar
 %{bindir}/catalina-tasks.xml
@@ -561,6 +567,11 @@ fi
 %{appdir}/sample
 
 %changelog
+* Mon Feb 7 2011 David Knox <dknox@redhat.com> 0:6.0.32-1
+- Rebase on 6.0.32 with several bug fixes and security fixes
+- changed apache-commons to jakarta-commons to fix missing
+- dependencies during install. 
+
 * Thu Feb 3 2011 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.30-1
 - Update to 6.0.30.
 - Drop jdt-core.pom which is gone upstream now.
