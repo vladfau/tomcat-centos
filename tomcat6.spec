@@ -53,7 +53,7 @@
 Name:          tomcat6
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -273,7 +273,6 @@ zip -u output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{libdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{logdir}
 /bin/touch ${RPM_BUILD_ROOT}%{logdir}/catalina.out
-chmod 775 ${RPM_BUILD__ROOT}%{logdir}/catalina.out
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{homedir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{tempdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{workdir}
@@ -567,10 +566,14 @@ fi
 %{appdir}/sample
 
 %changelog
-* Mon Feb 7 2011 David Knox <dknox@redhat.com> 0:6.0.32-1
+* Mon Feb 28 2011 David Knox <dknox@redhat.com> 0:6.0.32-1
 - Rebase on 6.0.32 with several bug fixes and security fixes
 - changed apache-commons to jakarta-commons to fix missing
-- dependencies during install. 
+- dependencies during install. Adjusted permissions on logs and
+- conf dirs so init worked. Reversed order of reading conf files
+
+* Wed Feb 09 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:6.0.30-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
 
 * Thu Feb 3 2011 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.30-1
 - Update to 6.0.30.
