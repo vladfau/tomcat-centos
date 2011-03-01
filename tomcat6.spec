@@ -53,7 +53,7 @@
 Name:          tomcat6
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       3%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -566,7 +566,7 @@ fi
 %{appdir}/sample
 
 %changelog
-* Mon Feb 28 2011 David Knox <dknox@redhat.com> 0:6.0.32-2
+* Mon Feb 28 2011 David Knox <dknox@redhat.com> 0:6.0.32-3
 - Resolves rhbz 640134 - setting JAVA_HOME
 
 * Mon Feb 28 2011 David Knox <dknox@redhat.com> 0:6.0.32-1
