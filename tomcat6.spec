@@ -53,7 +53,7 @@
 Name:          tomcat6
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       4%{?dist}
+Release:       5%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -566,6 +566,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Fri Mar 04 2011 David Knox <dknox@redhat.com> 0:6.0.32-5
+- Fixed typo in tomcat6 init
+
 * Wed Mar 02 2011 David Knox <dknox@redhat.com> 0:6.0.32-4
 - Resolves rhbz 681677  
 
