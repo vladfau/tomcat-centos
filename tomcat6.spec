@@ -53,7 +53,7 @@
 Name:          tomcat6
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       5%{?dist}
+Release:       6%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -405,7 +405,7 @@ done
 # add the tomcat user and group
 %{_sbindir}/groupadd -g %{tcuid} -r tomcat 2>/dev/null || :
 %{_sbindir}/useradd -c "Apache Tomcat" -u %{tcuid} -g tomcat \
-    -s /bin/sh -r -d %{homedir} tomcat 2>/dev/null || :
+    -s /bin/nologin -r -d %{homedir} tomcat 2>/dev/null || :
 # Save the conf, app, and lib dirs
 # due to rbgz 640686. Copy them to the _tmppath so we don't pollute
 # the tomcat file structure
@@ -566,6 +566,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Fri Mar 04 2011 David Knox <dknox@redhat.com> 0:6.0.32-6
+- In useradd, set tomcat user shell to /sbin/nologin 
+
 * Fri Mar 04 2011 David Knox <dknox@redhat.com> 0:6.0.32-5
 - Fixed typo in tomcat6 init
 
