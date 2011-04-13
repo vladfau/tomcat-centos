@@ -53,7 +53,7 @@
 Name:          tomcat6
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       6%{?dist}
+Release:       7%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -480,7 +480,7 @@ if [ "$1" = "0" ]; then
 fi
 
 %files
-%defattr(-,root,tomcat,0775)
+%defattr(0664,root,tomcat,0775)
 %doc {LICENSE,NOTICE,RELEASE*}
 %attr(0755,root,root) %{_bindir}/%{name}-digest
 %attr(0755,root,root) %{_bindir}/%{name}-tool-wrapper
@@ -490,22 +490,22 @@ fi
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %attr(0765,root,tomcat) %dir %{basedir}
-%attr(0775,tomcat,root) %dir %{appdir}
-%attr(0775,tomcat,root) %dir %{confdir}
-%attr(0775,tomcat,root) %dir %{confdir}/Catalina
-%attr(0775,tomcat,root) %dir %{confdir}/Catalina/localhost
-%config(noreplace) %{confdir}/%{name}.conf
-%config(noreplace) %{confdir}/*.policy
-%config(noreplace) %{confdir}/*.properties
-%config(noreplace) %{confdir}/context.xml
-%config(noreplace) %{confdir}/server.xml
-%config(noreplace) %{confdir}/log4j.properties
-%attr(0664,tomcat,root) %config(noreplace) %{confdir}/tomcat-users.xml
-%config(noreplace) %{confdir}/web.xml
-%attr(0765,tomcat,root) %dir %{cachedir}
-%attr(0765,tomcat,root) %dir %{tempdir}
-%attr(0765,tomcat,root) %dir %{workdir}
-%attr(0775,tomcat,root) %dir %{logdir}
+%attr(0775,root,tomcat) %dir %{appdir}
+%attr(0775,root,tomcat) %dir %{confdir}
+%attr(0775,root,tomcat) %dir %{confdir}/Catalina
+%attr(0775,root,tomcat) %dir %{confdir}/Catalina/localhost
+%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/%{name}.conf
+%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/*.policy
+%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/*.properties
+%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/context.xml
+%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/server.xml
+%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/log4j.properties
+%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/tomcat-users.xml
+%attr(0666,tomcat,tomcat) %config(noreplace) %{confdir}/web.xml
+%attr(0775,root,tomcat) %dir %{cachedir}
+%attr(0775,root,tomcat) %dir %{tempdir}
+%attr(0775,root,tomcat) %dir %{workdir}
+%attr(0775,root,tomcat) %dir %{logdir}
 %attr(0664,tomcat,tomcat) %{logdir}/catalina.out
 %dir %{homedir}
 %{bindir}/bootstrap.jar
@@ -523,7 +523,7 @@ fi
 %exclude %{_mavenpomdir}/*api*
 
 %files admin-webapps
-%defattr(-,root,root,-)
+%defattr(0664,root,tomcat,0775)
 %{appdir}/host-manager
 %{appdir}/manager
 
@@ -560,12 +560,17 @@ fi
 %{_mavenpomdir}/JPP-%{name}-el-api.pom
 
 %files webapps
-%defattr(-,root,tomcat,-)
+%defattr(0664,root,tomcat,0775)
 %{appdir}/ROOT
 %{appdir}/examples
 %{appdir}/sample
 
 %changelog
+* Wed Apr 13 2011 David Knox <dknox@redhat.com> 0:6.0.32-7
+- Resolve: rhbz 693292 - manager app doesn't work (directory permissions)
+- Resolve: rhbz 677414 - incorrect directory permissions
+- Init scripts log to $logdir/initd.log versus catalina.out
+
 * Fri Mar 04 2011 David Knox <dknox@redhat.com> 0:6.0.32-6
 - In useradd, set tomcat user shell to /sbin/nologin 
 

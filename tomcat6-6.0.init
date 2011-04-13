@@ -184,10 +184,10 @@ function start() {
     parseOptions
     if [ "$RETVAL" -eq "0" -a "$SECURITY_MANAGER" = "true" ]; then
         $SU - $TOMCAT_USER -c "${TOMCAT_SCRIPT} start-security" \
-            >> $TOMCAT_LOG 2>&1 || RETVAL="4"
+            >> /var/log/${NAME}/initd.log 2>&1 || RETVAL="4"
     else
        
-       [ "$RETVAL" -eq "0" ] && $SU - $TOMCAT_USER -c "${TOMCAT_SCRIPT} start" >> $TOMCAT_LOG 2>&1 || RETVAL="4"
+       [ "$RETVAL" -eq "0" ] && $SU - $TOMCAT_USER -c "${TOMCAT_SCRIPT} start" >> /var/log/${NAME}/initd.log 2>&1 || RETVAL="4"
     fi
     if [ "$RETVAL" -eq "0" ]; then 
         log_success_msg
@@ -206,7 +206,7 @@ function stop() {
       parseOptions
       if [ "$RETVAL" -eq "0" ]; then
          touch /var/lock/subsys/${NAME} 2>&1 || RETVAL="4"
-         [ "$RETVAL" -eq "0" ] && $SU - $TOMCAT_USER -c "${TOMCAT_SCRIPT} stop" >> $TOMCAT_LOG 2>&1 || RETVAL="4"
+         [ "$RETVAL" -eq "0" ] && $SU - $TOMCAT_USER -c "${TOMCAT_SCRIPT} stop" >> /var/log/${NAME}/initd.log 2>&1 || RETVAL="4"
       fi
       if [ "$RETVAL" -eq "0" ]; then
          count="0"
