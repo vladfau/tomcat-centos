@@ -9,7 +9,7 @@ fi
 
 # Get the tomcat config (use this for environment specific settings)
 #if [ -z "${TOMCAT_CFG}" ]; then
-#  TOMCAT_CFG="/etc/tomcat6/tomcat6.conf"
+#  TOMCAT_CFG="/etc/tomcat7/tomcat7.conf"
 #fi
 
 #if [ -r "$TOMCAT_CFG" ]; then

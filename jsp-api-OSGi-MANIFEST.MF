@@ -4,10 +4,10 @@ Bundle-Localization: plugin
 Bundle-RequiredExecutionEnvironment: CDC-1.0/Foundation-1.0,J2SE-1.3
 Bundle-Name: %bundleName
 Bundle-SymbolicName: javax.servlet.jsp
-Export-Package: javax.servlet.jsp; version=2.0,javax.servlet.jsp.el; v
- ersion=2.0,javax.servlet.jsp.resources; version=2.0,javax.servlet.jsp
- .tagext; version=2.0
-Bundle-Version: 2.0.0.v200806031607
+Export-Package: javax.servlet.jsp; version=2.2,javax.servlet.jsp.el; v
+ ersion=2.2,javax.servlet.jsp.resources; version=2.2,javax.servlet.jsp
+ .tagext; version=2.2
+Bundle-Version: 2.2.0.v200806031607
 Bundle-ManifestVersion: 2
-Import-Package: javax.servlet; version=2.4,javax.servlet.http; version
- =2.4,javax.servlet.resources; version=2.4
+Import-Package: javax.servlet; version=3.0,javax.servlet.http; version
+ =3.0,javax.servlet.resources; version=3.0

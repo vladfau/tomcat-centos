@@ -4,7 +4,7 @@ Bundle-SymbolicName: javax.servlet
 Bundle-ManifestVersion: 2
 Bundle-Name: %bundleName
 Bundle-Localization: plugin
-Bundle-Version: 2.5.0.v200806031605
+Bundle-Version: 3.0.0
 Bundle-Vendor: %bundleProvider
-Export-Package: javax.servlet;version="2.5",javax.servlet.http;version
- ="2.5",javax.servlet.resources;version="2.5"
+Export-Package: javax.servlet;version="3.0",javax.servlet.http;version
+ ="3.0",javax.servlet.resources;version="3.0"

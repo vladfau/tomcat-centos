@@ -28,13 +28,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-%global jspspec 2.1
-%global major_version 6
+%global jspspec 2.2
+%global major_version 7
 %global minor_version 0
-%global micro_version 32
+%global micro_version 12
 %global packdname apache-tomcat-%{version}-src
-%global servletspec 2.5
-%global elspec 2.1
+%global servletspec 3.0
+%global elspec 2.2
 %global tcuid 91
 
 # FHS 2.3 compliant tree structure - http://www.pathname.com/fhs/2.3/
@@ -50,10 +50,10 @@
 %global workdir %{cachedir}/work
 %global _initrddir %{_sysconfdir}/init.d
 
-Name:          tomcat6
+Name:          tomcat7
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       7%{?dist}
+Release:       1%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -72,8 +72,7 @@ Source9:       jsp-api-OSGi-MANIFEST.MF
 Source10:      %{name}-%{major_version}.%{minor_version}-log4j.properties
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
-# In 6.0.32 source
-#Patch2:        %{name}-%{major_version}.%{minor_version}-rhbz-674601.patch
+
 BuildArch:     noarch
 
 BuildRequires: ant
@@ -146,7 +145,7 @@ Javadoc generated documentation for Apache Tomcat.
 Group: Internet/WWW/Dynamic Content
 Summary: Apache Tomcat JSP API implementation classes
 Provides: jsp = %{jspspec}
-Provides: jsp21
+Provides: jsp22
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
 Requires(post): chkconfig
 Requires(postun): chkconfig
@@ -175,7 +174,7 @@ Group: Internet/WWW/Dynamic Content
 Summary: Apache Tomcat Servlet API implementation classes
 Provides: servlet = %{servletspec}
 Provides: servlet6
-Provides: servlet25
+Provides: servlet3
 Requires(post): chkconfig
 Requires(postun): chkconfig
 
@@ -228,14 +227,22 @@ export OPT_JAR_LIST="xalan-j2-serializer"
       -Dcommons-daemon.native.src.tgz="HACK" \
       -Djasper-jdt.jar="$(build-classpath ecj)" \
       -Djdt.jar="$(build-classpath ecj)" \
-      -Dtomcat-dbcp.jar="$(build-classpath apache-commons-dbcp)" \
       -Dtomcat-native.tar.gz="HACK" \
       -Dversion="%{version}" \
       -Dversion.build="%{micro_version}"
    # javadoc generation
-   %{ant} -f dist.xml dist-prepare
-   %{ant} -f dist.xml dist-source
-   %{ant} -f dist.xml dist-javadoc
+   %{ant} -Dbase.path="." \
+      -Dbuild.compiler="modern" \
+      -Dcommons-collections.jar="$(build-classpath apache-commons-collections)" \
+      -Dcommons-daemon.jar="$(build-classpath apache-commons-daemon)" \
+      -Dcommons-daemon.native.src.tgz="HACK" \
+      -Djasper-jdt.jar="$(build-classpath ecj)" \
+      -Djdt.jar="$(build-classpath ecj)" \
+      -Dtomcat-native.tar.gz="HACK" \
+      -Dversion="%{version}" \
+      -Dversion.build="%{micro_version}" \
+      dist-prepare dist-source javadoc
+
     # remove some jars that we'll replace with symlinks later
    %{__rm} output/build/bin/commons-daemon.jar \
            output/build/lib/ecj.jar
@@ -341,7 +348,7 @@ pushd ${RPM_BUILD_ROOT}%{libdir}
     %{__ln_s} $(build-classpath log4j) log4j.jar
     %{__ln_s} $(build-classpath ecj) jasper-jdt.jar
 
-    # Link the juli jar into /usr/share/java/tomcat6
+    # Link the juli jar into /usr/share/java/tomcat7
     %{__ln_s} %{bindir}/tomcat-juli.jar .
 popd
 
@@ -364,7 +371,7 @@ popd
 
 
 # Generate a depmap fragment javax.servlet:servlet-api pointing to
-# tomcat6-servlet-2.5-api for backwards compatibility
+# tomcat7-servlet-3.0-api for backwards compatibility
 %add_to_maven_depmap javax.servlet servlet-api %{servletspec} JPP %{name}-servlet-%{servletspec}-api
 # also provide jetty depmap (originally in jetty package, but it's cleaner to have it here)
 %add_to_maven_depmap org.mortbay.jetty servlet-api %{servletspec} JPP %{name}-servlet-%{servletspec}-api
@@ -379,25 +386,25 @@ for pom in *.pom; do
 done
 
 # we won't install dbcp, juli-adapters and juli-extras pom files
-for pom in annotations-api.pom catalina.pom jasper-el.pom jasper.pom \
-           catalina-ha.pom el-api.pom; do
+for pom in tomcat-annotations-api.pom tomcat-catalina.pom tomcat-jasper-el.pom tomcat-jasper.pom \
+           tomcat-catalina-ha.pom tomcat-el-api.pom; do
     %{__cp} -a $pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-$pom
     base=`basename $pom .pom`
     %add_to_maven_depmap org.apache.tomcat $base %{version} JPP/%{name} $base
 done
 
-# servlet-api jsp-api and el-api are not in tomcat6 subdir, since they are widely re-used elsewhere
-for pom in jsp-api.pom servlet-api.pom el-api.pom;do
+# servlet-api jsp-api and el-api are not in tomcat7 subdir, since they are widely re-used elsewhere
+for pom in tomcat-jsp-api.pom tomcat-servlet-api.pom tomcat-el-api.pom;do
     %{__cp} -a $pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-%{name}-$pom
     base=`basename $pom .pom`
     %add_to_maven_depmap org.apache.tomcat $base %{version} JPP %{name}-$base
 done
 
 # two special pom where jar files have different names
-%{__cp} -a tribes.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-catalina-tribes.pom
+%{__cp} -a tomcat-tribes.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-catalina-tribes.pom
 %add_to_maven_depmap org.apache.tomcat tribes %{version} JPP/%{name} catalina-tribes
 
-%{__cp} -a juli.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-juli.pom
+%{__cp} -a tomcat-juli.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-juli.pom
 %add_to_maven_depmap org.apache.tomcat juli %{version} JPP/%{name} tomcat-juli
 
 
@@ -539,7 +546,7 @@ fi
 %defattr(-,root,root,-)
 %{_javadir}/%{name}-jsp-%{jspspec}*.jar
 %{_javadir}/%{name}-jsp-api.jar
-%{_mavenpomdir}/JPP-%{name}-jsp-api.pom
+%{_mavenpomdir}/JPP-%{name}-tomcat-jsp-api.pom
 
 %files lib
 %defattr(-,root,root,-)
@@ -550,14 +557,14 @@ fi
 %{_javadir}/%{name}-servlet-%{servletspec}*.jar
 %{_javadir}/%{name}-servlet-api.jar
 %{_mavendepmapfragdir}/%{name}-servlet-api
-%{_mavenpomdir}/JPP-%{name}-servlet-api.pom
+%{_mavenpomdir}/JPP-%{name}-tomcat-servlet-api.pom
 
 %files el-%{elspec}-api
 %defattr(-,root,root,-)
 %{_javadir}/%{name}-el-%{elspec}-api.jar
 %{_javadir}/%{name}-el-api.jar
 %{_javadir}/%{name}/%{name}-el-%{elspec}-api.jar
-%{_mavenpomdir}/JPP-%{name}-el-api.pom
+%{_mavenpomdir}/JPP-%{name}-tomcat-el-api.pom
 
 %files webapps
 %defattr(0664,root,tomcat,0775)
@@ -566,6 +573,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Wed Apr 27 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.12-1
+- Tomcat7
+
 * Wed Apr 13 2011 David Knox <dknox@redhat.com> 0:6.0.32-7
 - Resolve: rhbz 693292 - manager app doesn't work (directory permissions)
 - Resolve: rhbz 677414 - incorrect directory permissions
