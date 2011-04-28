@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# tomcat7-digest script
+# tomcat-digest script
 # JPackage Project <http://www.jpackage.org/>
 
 # Source functions library
@@ -13,7 +13,7 @@ fi
 
 # Get the tomcat config (use this for environment specific settings)
 if [ -z "${TOMCAT_CFG}" ]; then
-    TOMCAT_CFG="/etc/tomcat7/tomcat7.conf"
+    TOMCAT_CFG="/etc/tomcat/tomcat.conf"
 fi
 
 if [ -r "$TOMCAT_CFG" ]; then
@@ -32,9 +32,9 @@ export CLASSPATH
 
 # Configuration
 MAIN_CLASS="org.apache.catalina.startup.Tool"
-BASE_FLAGS="-Dcatalina.home=\"$CATALINA_HOME\""
 BASE_OPTIONS=""
-BASE_JARS="commons-daemon tomcat7/catalina servlet"
+BASE_FLAGS="-Dcatalina.home=\"$CATALINA_HOME\""
+BASE_JARS="commons-daemon tomcat/catalina servlet"
 
 # Set parameters
 set_classpath $BASE_JARS
@@ -42,4 +42,4 @@ set_flags $BASE_FLAGS
 set_options $BASE_OPTIONS
 
 # Let's start
-run -server org.apache.catalina.realm.RealmBase "$@"
+run "$@"

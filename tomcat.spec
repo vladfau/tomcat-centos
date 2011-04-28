@@ -50,10 +50,10 @@
 %global workdir %{cachedir}/work
 %global _initrddir %{_sysconfdir}/init.d
 
-Name:          tomcat7
+Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         Networking/Daemons
@@ -79,21 +79,21 @@ BuildRequires: ant
 BuildRequires: ant-nodeps
 BuildRequires: ecj
 BuildRequires: findutils
-BuildRequires: jakarta-commons-collections
-BuildRequires: jakarta-commons-daemon
-BuildRequires: jakarta-commons-dbcp
-BuildRequires: jakarta-commons-pool
+BuildRequires: apache-commons-collections
+BuildRequires: apache-commons-daemon
+BuildRequires: apache-commons-dbcp
+BuildRequires: apache-commons-pool
 BuildRequires: jakarta-taglibs-standard
-BuildRequires: java-1.6.0-devel
+BuildRequires: java-devel >= 1:1.6.0
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
 BuildRequires: log4j
-Requires:      jakarta-commons-daemon
-Requires:      jakarta-commons-logging
-Requires:      jakarta-commons-collections
-Requires:      jakarta-commons-dbcp
-Requires:      jakarta-commons-pool
-Requires:      java-1.6.0
+Requires:      apache-commons-daemon
+Requires:      apache-commons-logging
+Requires:      apache-commons-collections
+Requires:      apache-commons-dbcp
+Requires:      apache-commons-pool
+Requires:      java >= 1:1.6.0
 Requires:      procps
 Requires:      %{name}-lib = %{epoch}:%{version}-%{release}
 Requires(pre):    shadow-utils
@@ -104,9 +104,6 @@ Requires(post):   redhat-lsb
 Requires(preun):  redhat-lsb
 Requires(post):   jpackage-utils
 Requires(postun): jpackage-utils
-
-# added after log4j sub-package was removed
-Provides:         %{name}-log4j = %{epoch}:%{version}-%{release}
 
 %description
 Tomcat is the servlet container that is used in the official Reference
@@ -161,9 +158,9 @@ Requires: %{name}-jsp-%{jspspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-el-%{elspec}-api = %{epoch}:%{version}-%{release}
 Requires: ecj
-Requires: jakarta-commons-collections
-Requires: jakarta-commons-dbcp
-Requires: jakarta-commons-pool
+Requires: apache-commons-collections
+Requires: apache-commons-dbcp
+Requires: apache-commons-pool
 Requires(preun): coreutils
 
 %description lib
@@ -238,7 +235,6 @@ export OPT_JAR_LIST="xalan-j2-serializer"
       -Dcommons-daemon.native.src.tgz="HACK" \
       -Djasper-jdt.jar="$(build-classpath ecj)" \
       -Djdt.jar="$(build-classpath ecj)" \
-      -Dtomcat-native.tar.gz="HACK" \
       -Dversion="%{version}" \
       -Dversion.build="%{micro_version}" \
       dist-prepare dist-source javadoc
@@ -348,7 +344,7 @@ pushd ${RPM_BUILD_ROOT}%{libdir}
     %{__ln_s} $(build-classpath log4j) log4j.jar
     %{__ln_s} $(build-classpath ecj) jasper-jdt.jar
 
-    # Link the juli jar into /usr/share/java/tomcat7
+    # Link the juli jar into /usr/share/java/tomcat
     %{__ln_s} %{bindir}/tomcat-juli.jar .
 popd
 
@@ -371,7 +367,7 @@ popd
 
 
 # Generate a depmap fragment javax.servlet:servlet-api pointing to
-# tomcat7-servlet-3.0-api for backwards compatibility
+# tomcat-servlet-3.0-api for backwards compatibility
 %add_to_maven_depmap javax.servlet servlet-api %{servletspec} JPP %{name}-servlet-%{servletspec}-api
 # also provide jetty depmap (originally in jetty package, but it's cleaner to have it here)
 %add_to_maven_depmap org.mortbay.jetty servlet-api %{servletspec} JPP %{name}-servlet-%{servletspec}-api
@@ -393,7 +389,7 @@ for pom in tomcat-annotations-api.pom tomcat-catalina.pom tomcat-jasper-el.pom t
     %add_to_maven_depmap org.apache.tomcat $base %{version} JPP/%{name} $base
 done
 
-# servlet-api jsp-api and el-api are not in tomcat7 subdir, since they are widely re-used elsewhere
+# servlet-api jsp-api and el-api are not in tomcat subdir, since they are widely re-used elsewhere
 for pom in tomcat-jsp-api.pom tomcat-servlet-api.pom tomcat-el-api.pom;do
     %{__cp} -a $pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-%{name}-$pom
     base=`basename $pom .pom`
@@ -413,12 +409,6 @@ done
 %{_sbindir}/groupadd -g %{tcuid} -r tomcat 2>/dev/null || :
 %{_sbindir}/useradd -c "Apache Tomcat" -u %{tcuid} -g tomcat \
     -s /bin/nologin -r -d %{homedir} tomcat 2>/dev/null || :
-# Save the conf, app, and lib dirs
-# due to rbgz 640686. Copy them to the _tmppath so we don't pollute
-# the tomcat file structure
-[ -d %{appdir} ] && %{__cp} -rp %{appdir} %{_tmppath}/%{name}-webapps.bak || :
-[ -d %{confdir} ] && %{__cp} -rp %{confdir} %{_tmppath}/%{name}-confdir.bak || :
-[ -d %{libdir}  ] && %{__cp} -rp %{libdir} %{_tmppath}/%{name}-libdir.bak || :
 
 %post
 # install but don't activate
@@ -573,256 +563,13 @@ fi
 %{appdir}/sample
 
 %changelog
+* Wed Apr 28 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.12-1
+- Package now named just tomcat instead of tomcat7
+- Removed Provides:  %{name}-log4j 
+- Switched to apache-commons-* names instead of jakarta-commons-* .
+- Remove the old changelog 
+- BR/R java >= 1:1.6.0 , same for java-devel
+- Removed old tomcat6 crap
+
 * Wed Apr 27 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.12-1
 - Tomcat7
-
-* Wed Apr 13 2011 David Knox <dknox@redhat.com> 0:6.0.32-7
-- Resolve: rhbz 693292 - manager app doesn't work (directory permissions)
-- Resolve: rhbz 677414 - incorrect directory permissions
-- Init scripts log to $logdir/initd.log versus catalina.out
-
-* Fri Mar 04 2011 David Knox <dknox@redhat.com> 0:6.0.32-6
-- In useradd, set tomcat user shell to /sbin/nologin 
-
-* Fri Mar 04 2011 David Knox <dknox@redhat.com> 0:6.0.32-5
-- Fixed typo in tomcat6 init
-
-* Wed Mar 02 2011 David Knox <dknox@redhat.com> 0:6.0.32-4
-- Resolves rhbz 681677  
-
-* Mon Feb 28 2011 David Knox <dknox@redhat.com> 0:6.0.32-3
-- Resolves rhbz 640134 - setting JAVA_HOME
-
-* Mon Feb 28 2011 David Knox <dknox@redhat.com> 0:6.0.32-1
-- Rebase on 6.0.32 with several bug fixes and security fixes
-- changed apache-commons to jakarta-commons to fix missing
-- dependencies during install. Adjusted permissions on logs and
-- conf dirs so init worked. Reversed order of reading conf files
-
-* Wed Feb 09 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:6.0.30-2
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
-
-* Thu Feb 3 2011 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.30-1
-- Update to 6.0.30.
-- Drop jdt-core.pom which is gone upstream now.
-
-* Wed Feb 2 2011 David Knox <dknox@redhat.com> 0:6.0.29-3
-- Resolves rhbz# 674601 - JDK Double.parseDouble DoS
-
-* Mon Jan 17 2011 David Knox <dknox@redhat.com> 0:6.0.29-2
-- Resolves: rhbz# 669969 - tomcat-jdbc missing
-- Resolves problem with multiple instances of tomcat services. References to 
-- hardcoded directory locations have been changed to ${CATALINA_HOME]
-- to avoid confusion
-
-* Mon Jan 3 2011 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.29-1
-- Update to new upstream.
-- Simplify buildroot.
-- Don't require files but packages.
-
-* Wed Dec  8 2010 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:6.0.26-18
-- Add api jars without spec version symlinks
-- Remove clean section
-- Remove whitespaces at the EOLs
-
-* Mon Dec  6 2010 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:6.0.26-17
-- Add jetty to servlet-api depmap
-
-* Thu Dec  2 2010 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:6.0.26-16
-- Fixes according to guidelines (versionless jars, no random defattrs)
-- Simplify pom installation by splitting to more steps
-- Formatting cleanups
-- Removed log4j subpackage (used bundled log4j, replaced by symlink)
-
-* Thu Dec  2 2010 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:6.0.26-15
-- Fix log4j symlink (Resolves rhbz#654660)
-
-* Mon Nov 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-14
-- Resolving rhbz 640686: save appdir, confdir, and libdir during
-- pre and copy them back during posttrans. The directories are
-- copied to /var/tmp. They are copied back during posttrans and
-- removed from /var/tmp.
-
-* Tue Nov 9 2010 Chris Spike <chris.spike@arcor.de> 0:6.0.26-13
-- Added javax.servlet:servlet-api depmap entry to servlet-2.5-api subpackage
-
-* Thu Oct 14 2010 David Knox <dknox@redhat.com> 0:6.0.26-12
-- Resolves rhbz#640686 - Upgrade of tomcat6 wipes out directories
-- WARNING - Back up all files that need to be preserved before
-- package update or uninstall - WARNING
-- Resolves: rhbz#638914 - update versions of commons-collections,
-- commons-dbcp, and commons-pool
-
-* Thu Oct 07 2010 David Knox <dknox@redhat.com> 0:6.0.26-11
-- resolves rhbz#640837 - tomcat user requires login shell
-
-* Mon Oct 04 2010 David Knox <dknox@redhat.com> 0:6.0.26-10
-- ant-nodeps is breaking the build. Put ant-nodeps on the
-- OPT_JAR_LIST
-
-* Fri Oct 01 2010 David Knox <dknox@rehat.com> 0:6.0.26-9
-- Resolves rhbz#575341 - Additionally created instances of Tomcat
-- are broken
-
-* Fri Jul 02 2010 David Knox <dknox@rehat.com> 0:6.0.26-8
-- LSB initscript compliance
-
-* Thu Jul 01 2010 David Knox <dknox@redhat.com> 0:6.0.26-7
-- Made elspec the standard for elspec %post and %postun.
-
-* Tue Jun 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-6
-- Completed package and file sections. Added el-spec. Fixed
-- directory permission problems.
-
-* Thu May 6 2010 David Knox <dknox@redhat.com> 0:6.0.26-5
-- Working on 589145. Tomcat can't find java compiler for java.
-
-* Tue Apr 08 2010 David Knox <dknox@redhat.com> 0:6.0.26-4
-- Moved build-jar-repository to later in the install process.
-
-* Tue Apr 06 2010 David Knox <dknox@redhat.com> 0:6.0.26-3
-- Incremented the Release tag to 3 to avoid any confusion about which
-- is the most recent
-
-* Tue Apr 06 2010 David Knox <dknox@redhat.com> 0:6.0.26-1
-- Solved packaging problems involving taglibs-standard
-- Solved packaging problems involving jakarta-commons
-- Corrected Requires(post) to Requires and checked companion BuildRequires
-
-* Mon Mar 29 2010 David Knox <dknox@redhat.com> 0:6.0.26-2
-- Update source to tomcat6.0.26
-- Bugzilla 572357 - Please retest.
-- OSGi manifests for servlet-api and jsp-api
-
-
-* Fri Mar 26 2010 Mary Ellen Foster <mefoster@gmail.com> 0:6.0.24-2
-- Add maven POMs and metadata
-- Link tomcat6-juli into /usr/share/java/tomcat6
-
-* Mon Mar 1 2010 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.24-1
-- Update to 6.0.24.
-
-* Tue Dec 22 2009 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.20-2
-- Drop file requires on /usr/share/java/ecj.jar.
-
-* Mon Nov 9 2009 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.20-1
-- Update to 6.0.20. Fixes CVE-2009-0033,CVE-2009-0580.
-
-* Sun Jul 26 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:6.0.18-10.2
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
-
-* Wed Apr 1 2009 Alexander Kurtakov <akurtako@redhat.com> 0:6.0.18-9.2
-- Add OSGi manifest for servlet-api.
-
-* Wed Feb 25 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:6.0.18-9.1
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_11_Mass_Rebuild
-
-* Tue Dec 02 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-8.1
-- build for Fedora
-
-* Tue Dec 02 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-8
-- fix directory ownership
-
-* Thu Nov 13 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-7
-- add Requires for update-alternatives
-
-* Tue Oct 07 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-6
-- use lsb_release instead of lsb-release to get the distributor
-
-* Tue Oct 07 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-5
-- fix initscript messages on Mandriva Linux
-- fix help message in initscript
-
-* Wed Oct 01 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-4
-- redefine %%_initrddir for FHS-compliance
-- make initscript LSB-complaint
-
-* Fri Sep 26 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-3
-- fix status in initscript
-
-* Thu Sep 25 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-2
-- remove initscripts and /sbin/service requirement
-- call initscript directly without using /sbin/service
-- require /sbin/chkconfig instead of chkconfig
-- remove chkconfig requirement from packages that don't require it
-
-* Tue Aug 26 2008 David Walluck <dwalluck@redhat.com> 0:6.0.18-1
-- 6.0.18
-- Resolves: CVE-2008-1232, CVE-2008-1947, CVE-2008-2370, CVE-2008-2938
-- fix definition of java.security.policy with d%%{name} start-security
-- don't pass $CATALINA_OPTS with d%%{name} stop
-- redefine tempdir and workdir for tmpwatch workaround
-- change eclipse-ecj references to ecj
-
-* Thu Jul 10 2008 Tom "spot" Callaway <tcallawa@redhat.com> - 0:6.0.16-1.8
-- drop repotag
-
-* Fri Apr 04 2008 David Walluck <dwalluck@redhat.com> 0:6.0.16-1jpp.7.fc9
-- version jsp and servlet Provides with their spec versions
-- remove Obsoletes/Provides for servletapi6 package as it can co-exist
-- check for java-functions existence in wrapper script
-- move d%%{name} to %%{name} and create symlink for d%%{name}
-- improve status function in initscript
-- change license to ASL 2.0 again as per Fedora guidelines
-
-* Mon Mar 24 2008 David Walluck <dwalluck@redhat.com> 0:6.0.16-1jpp.6.fc9
-- remove Requires: tomcat-native
-- put back original JPackage Group (except javadoc) and License tags
-- add Provides for jsp and servlet
-- use ant macro
-- build and install sample webapp
-- call /sbin/service to stop service on uninstall
-- remove references to $RPM_BUILD_DIR
-- use copy instead of move to fix short-circuit install build
-- remove prebuilt sample.war
-- remove Thumbs.db files
-- add Requires: java >= 0:1.6.0
-
-* Wed Mar 19 2008 David Walluck <dwalluck@redhat.com> 0:6.0.16-1jpp.5.fc9
-- explicitly unset CLASSPATH
-- explicitly set OPT_JAR_LIST to include ant/ant-trax
-
-* Tue Mar 18 2008 David Walluck <dwalluck@redhat.com> 0:6.0.16-1jpp.4.fc9
-- remove BuildRequires: sed
-- remove specific references to icedtea
-
-* Mon Mar 17 2008 David Walluck <dwalluck@redhat.com> 0:6.0.16-1jpp.3.fc9
-- add digest and tool-wrapper scripts
-- Requires: tomcat-native
-
-* Fri Mar 7 2008 David Walluck <dwalluck@redhat.com> 0:6.0.16-1jpp.2.fc9
-- use %%{_var} for appdir instead of /srv
-- use ${JAVACMD} for java executable in wrapper script
-- use built-in status function in initscript where possible
-- add missing require on procps for status function
-- fix java.library.path setting in %%{_sysconfdir}/sysconfig/%%{name}
-- add patch to document webapps in %%{_sysconfdir}/%%{name}/tomcat-users.xml
-- remove %%{appdir}/ROOT/admin
-- move %%{_bindir}/d%%{name} to %%{_sbindir}/d%%{name}
-
-* Mon Mar 3 2008 David Walluck <dwalluck@redhat.com> 0:6.0.16-1jpp.1.fc9
-- use %%{_initrddir} macro instead of %%{_sysconfdir}/init.d (rhbz #153187)
-- fix java.library.path setting in %%{name}.conf (rhbz #253605)
-- fix incorrect initscript output (rhbz #380921)
-- update initscript (rhbz #247077)
-- add logrotate support
-- fix strange-permission
-- fix %%prep
-- replace /var with %%{_var}
-- replace %%{_localstatedir} with %%{_var}
-- use %%{logdir} where possible
-- call build-jar-repository with full path in scriptlets
-- remove file-based requires
-- build with icedtea and set as the default JAVA_HOME in %%{name}.conf
-- fix non-standard-group
-- change ecj references to eclipse-ecj
-- change Apache Software License 2.0 to ASL 2.0 for rpmlint
-
-* Fri Feb  8 2008 Jason Corley <jason.corley@gmail.com> - 0:6.0.16-1jpp
-- update to 6.0.16
-
-* Sun Dec  2 2007 Jason Corley <jason.corley@gmail.com> - 0:6.0.14-2jpp
-- add /etc/tomcat6/Catalina/localhost (Alexander Kurtakov)
-
-* Tue Aug 14 2007 Jason Corley <jason.corley@gmail.com> 0:6.0.14-1jpp
-- first JPackage release
