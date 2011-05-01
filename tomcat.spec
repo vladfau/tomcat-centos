@@ -53,10 +53,10 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       3%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
-Group:         Networking/Daemons
+Group:         System Environment/Daemons
 License:       ASL 2.0
 URL:           http://tomcat.apache.org/
 Source0:       http://www.apache.org/dist/tomcat/tomcat-6/v%{version}/src/%{packdname}.tar.gz
@@ -116,7 +116,7 @@ released under the Apache Software License version 2.0. Tomcat is intended
 to be a collaboration of the best-of-breed developers from around the world.
 
 %package admin-webapps
-Group: System Environment/Applications
+Group: Applications/System
 Summary: The host-manager and manager web applications for Apache Tomcat
 Requires: %{name} = %{epoch}:%{version}-%{release}
 
@@ -124,7 +124,7 @@ Requires: %{name} = %{epoch}:%{version}-%{release}
 The host-manager and manager web applications for Apache Tomcat.
 
 %package docs-webapp
-Group: System Environment/Applications
+Group: Applications/Text
 Summary: The docs web application for Apache Tomcat
 Requires: %{name} = %{epoch}:%{version}-%{release}
 
@@ -139,7 +139,7 @@ Summary: Javadoc generated documentation for Apache Tomcat
 Javadoc generated documentation for Apache Tomcat.
 
 %package jsp-%{jspspec}-api
-Group: Internet/WWW/Dynamic Content
+Group: Development/Libraries
 Summary: Apache Tomcat JSP API implementation classes
 Provides: jsp = %{jspspec}
 Provides: jsp22
@@ -152,7 +152,7 @@ Apache Tomcat JSP API implementation classes.
 
 
 %package lib
-Group: Development/Compilers
+Group: Development/Libraries
 Summary: Libraries needed to run the Tomcat Web container
 Requires: %{name}-jsp-%{jspspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
@@ -167,7 +167,7 @@ Requires(preun): coreutils
 Libraries needed to run the Tomcat Web container.
 
 %package servlet-%{servletspec}-api
-Group: Internet/WWW/Dynamic Content
+Group: Development/Libraries
 Summary: Apache Tomcat Servlet API implementation classes
 Provides: servlet = %{servletspec}
 Provides: servlet6
@@ -179,7 +179,7 @@ Requires(postun): chkconfig
 Apache Tomcat Servlet API implementation classes.
 
 %package el-%{elspec}-api
-Group: Development/Libraries/Java
+Group: Development/Libraries
 Summary: Expression Language v1.0 API
 Provides: el_1_0_api = %{epoch}:%{version}-%{release}
 Provides: el_api = %{elspec}
@@ -190,7 +190,7 @@ Requires(postun): chkconfig
 Expression Language 1.0.
 
 %package webapps
-Group: System Environment/Applications
+Group: Applications/Internet
 Summary: The ROOT and examples web applications for Apache Tomcat
 Requires: %{name} = %{epoch}:%{version}-%{release}
 Requires: jakarta-taglibs-standard >= 0:1.1
@@ -276,6 +276,7 @@ zip -u output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{libdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{logdir}
 /bin/touch ${RPM_BUILD_ROOT}%{logdir}/catalina.out
+/bin/echo "%{name}-%{major_version}.%{minor_version}.%{micro_version} RPM installed" >> ${RPM_BUILD_ROOT}%{logdir}/catalina.out
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{homedir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{tempdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{workdir}
@@ -344,7 +345,7 @@ pushd ${RPM_BUILD_ROOT}%{libdir}
     %{__ln_s} $(build-classpath log4j) log4j.jar
     %{__ln_s} $(build-classpath ecj) jasper-jdt.jar
 
-    # Link the juli jar into /usr/share/java/tomcat
+    # Link the juli jar here from /usr/share/java/tomcat
     %{__ln_s} %{bindir}/tomcat-juli.jar .
 popd
 
@@ -428,23 +429,6 @@ done
 %{_sbindir}/update-alternatives --install %{_javadir}/elspec.jar elspec \
    %{_javadir}/%{name}-el-%{elspec}-api.jar 20250
 
-
-# move the temporary backups to the correct tomcat directory
-# due to rhbz 640686
-%posttrans
-if [ -d %{_tmppath}/%{name}-webapps.bak ]; then
-  %{__cp} -rp %{_tmppath}/%{name}-webapps.bak/* %{appdir}
-  %{__rm} -rf %{_tmppath}/%{name}-webapps.bak
-fi
-if [ -d %{_tmppath}/%{name}-libdir.bak ]; then
-  %{__cp} -rp %{_tmppath}/%{name}-libdir.bak/* %{libdir}
-  %{__rm} -rf %{_tmppath}/%{name}-libdir.bak
-fi
-if [ -d %{_tmppath}/%{name}-confdir.bak ]; then
-  %{__cp} -rp %{_tmppath}/%{name}-confdir.bak/* %{confdir}
-  %{__rm} -rf %{_tmppath}/%{name}-confdir.bak
-fi
-
 %preun
 # clean tempdir and workdir on removal or upgrade
 %{__rm} -rf %{workdir} %{tempdir}
@@ -477,7 +461,7 @@ if [ "$1" = "0" ]; then
 fi
 
 %files
-%defattr(0664,root,tomcat,0775)
+%defattr(0664,root,tomcat,0755)
 %doc {LICENSE,NOTICE,RELEASE*}
 %attr(0755,root,root) %{_bindir}/%{name}-digest
 %attr(0755,root,root) %{_bindir}/%{name}-tool-wrapper
@@ -487,8 +471,9 @@ fi
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %attr(0765,root,tomcat) %dir %{basedir}
+%defattr(0664,root,tomcat,0775)
 %attr(0775,root,tomcat) %dir %{appdir}
-%attr(0775,root,tomcat) %dir %{confdir}
+%attr(0755,root,tomcat) %dir %{confdir}
 %attr(0775,root,tomcat) %dir %{confdir}/Catalina
 %attr(0775,root,tomcat) %dir %{confdir}/Catalina/localhost
 %attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/%{name}.conf
@@ -497,8 +482,8 @@ fi
 %attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/context.xml
 %attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/server.xml
 %attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/log4j.properties
-%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/tomcat-users.xml
-%attr(0666,tomcat,tomcat) %config(noreplace) %{confdir}/web.xml
+%attr(0660,tomcat,tomcat) %config(noreplace) %{confdir}/tomcat-users.xml
+%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/web.xml
 %attr(0775,root,tomcat) %dir %{cachedir}
 %attr(0775,root,tomcat) %dir %{tempdir}
 %attr(0775,root,tomcat) %dir %{workdir}
@@ -508,6 +493,7 @@ fi
 %{bindir}/bootstrap.jar
 %{bindir}/catalina-tasks.xml
 %{bindir}/tomcat-juli.jar
+%{libdir}/tomcat-juli.jar
 %{homedir}/lib
 %{homedir}/temp
 %{homedir}/webapps
@@ -541,6 +527,8 @@ fi
 %files lib
 %defattr(-,root,root,-)
 %{libdir}
+%exclude %{libdir}/tomcat-juli.jar
+%exclude %{libdir}/%{name}-el-%{elspec}-api.jar
 
 %files servlet-%{servletspec}-api
 %defattr(-,root,root,-)
@@ -557,13 +545,20 @@ fi
 %{_mavenpomdir}/JPP-%{name}-tomcat-el-api.pom
 
 %files webapps
-%defattr(0664,root,tomcat,0775)
+%defattr(0644,tomcat,tomcat,0755)
 %{appdir}/ROOT
 %{appdir}/examples
 %{appdir}/sample
 
 %changelog
-* Wed Apr 28 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.12-1
+* Mon May 2 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.12-3
+- Fixed package groups
+- Fixed some permissions
+- Fixed some links
+- Removed old tomcat6 crap
+
+%changelog
+* Thu Apr 28 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.12-2
 - Package now named just tomcat instead of tomcat7
 - Removed Provides:  %{name}-log4j 
 - Switched to apache-commons-* names instead of jakarta-commons-* .
