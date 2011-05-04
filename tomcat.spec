@@ -53,7 +53,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       3%{?dist}
+Release:       4%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -88,6 +88,8 @@ BuildRequires: java-devel >= 1:1.6.0
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
 BuildRequires: log4j
+BuildRequires: geronimo-jaxrpc
+BuildRequires: wsdl4j
 Requires:      apache-commons-daemon
 Requires:      apache-commons-logging
 Requires:      apache-commons-collections
@@ -96,7 +98,6 @@ Requires:      apache-commons-pool
 Requires:      java >= 1:1.6.0
 Requires:      procps
 Requires:      %{name}-lib = %{epoch}:%{version}-%{release}
-Requires(pre):    shadow-utils
 Requires(pre):    shadow-utils
 Requires(post):   chkconfig
 Requires(preun):  chkconfig
@@ -216,6 +217,8 @@ export OPT_JAR_LIST="xalan-j2-serializer"
    # tomcat-dbcp.jar with apache-commons-{collections,dbcp,pool}-tomcat5.jar
    # so just create a dummy file for later removal
    touch HACK
+   %{__mkdir_p} HACKDIR
+   touch HACKDIR/build.xml
    # who needs a build.properties file anyway
    %{ant} -Dbase.path="." \
       -Dbuild.compiler="modern" \
@@ -224,20 +227,21 @@ export OPT_JAR_LIST="xalan-j2-serializer"
       -Dcommons-daemon.native.src.tgz="HACK" \
       -Djasper-jdt.jar="$(build-classpath ecj)" \
       -Djdt.jar="$(build-classpath ecj)" \
+      -Dtomcat-dbcp.jar="$(build-classpath apache-commons-dbcp)" \
       -Dtomcat-native.tar.gz="HACK" \
-      -Dversion="%{version}" \
-      -Dversion.build="%{micro_version}"
-   # javadoc generation
-   %{ant} -Dbase.path="." \
-      -Dbuild.compiler="modern" \
-      -Dcommons-collections.jar="$(build-classpath apache-commons-collections)" \
-      -Dcommons-daemon.jar="$(build-classpath apache-commons-daemon)" \
-      -Dcommons-daemon.native.src.tgz="HACK" \
-      -Djasper-jdt.jar="$(build-classpath ecj)" \
-      -Djdt.jar="$(build-classpath ecj)" \
+      -Dtomcat-native.dll.win32="HACK" \
+      -Dtomcat-native.dll.x64="HACK" \
+      -Dtomcat-native.dll.i64="HACK" \
+      -Dcommons-daemon.native.win.mgr.exe="HACK" \
+      -Dnsis.exe="HACK" \
+      -Djaxrpc-lib.jar="$(build-classpath jaxrpc)" \
+      -Dwsdl4j-lib.jar="$(build-classpath wsdl4j)" \
+      -Dcommons-pool.home="HACKDIR" \
+      -Dcommons-dbcp.home="HACKDIR" \
+      -Dno.build.dbcp=true \
       -Dversion="%{version}" \
       -Dversion.build="%{micro_version}" \
-      dist-prepare dist-source javadoc
+      deploy dist-prepare dist-source javadoc
 
     # remove some jars that we'll replace with symlinks later
    %{__rm} output/build/bin/commons-daemon.jar \
@@ -431,7 +435,7 @@ done
 
 %preun
 # clean tempdir and workdir on removal or upgrade
-%{__rm} -rf %{workdir} %{tempdir}
+%{__rm} -rf %{workdir}/* %{tempdir}/*
 if [ "$1" = "0" ]; then
     %{_initrddir}/%{name} stop >/dev/null 2>&1
     /sbin/chkconfig --del %{name}
@@ -551,13 +555,17 @@ fi
 %{appdir}/sample
 
 %changelog
+* Mon May 5 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.12-4
+- Provided local paths for libs
+- Fixed dependencies
+- Fixed update temp/work cleanup
+
 * Mon May 2 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.12-3
 - Fixed package groups
 - Fixed some permissions
 - Fixed some links
 - Removed old tomcat6 crap
 
-%changelog
 * Thu Apr 28 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.12-2
 - Package now named just tomcat instead of tomcat7
 - Removed Provides:  %{name}-log4j 
