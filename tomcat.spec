@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 12
+%global micro_version 14
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -53,7 +53,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       4%{?dist}
+Release:       1%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -555,6 +555,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Mon May 14 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.14-1
+- Updated to 7.0.14
+
 * Mon May 5 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.12-4
 - Provided local paths for libs
 - Fixed dependencies
