@@ -53,13 +53,13 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
 License:       ASL 2.0
 URL:           http://tomcat.apache.org/
-Source0:       http://www.apache.org/dist/tomcat/tomcat-6/v%{version}/src/%{packdname}.tar.gz
+Source0:       http://www.apache.org/dist/tomcat/tomcat-%{major_version}/v%{version}/src/%{packdname}.tar.gz
 Source1:       %{name}-%{major_version}.%{minor_version}.conf
 Source2:       %{name}-%{major_version}.%{minor_version}.init
 Source3:       %{name}-%{major_version}.%{minor_version}.sysconfig
@@ -135,6 +135,7 @@ The docs web application for Apache Tomcat.
 %package javadoc
 Group: Documentation
 Summary: Javadoc generated documentation for Apache Tomcat
+Requires: jpackage-utils
 
 %description javadoc
 Javadoc generated documentation for Apache Tomcat.
@@ -475,9 +476,15 @@ fi
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %attr(0765,root,tomcat) %dir %{basedir}
+%attr(0755,root,tomcat) %dir %{confdir}
+%defattr(0664,root,tomcat,0770)
+%attr(0770,root,tomcat) %dir %{logdir}
+%attr(0660,tomcat,tomcat) %{logdir}/catalina.out
+%attr(0770,root,tomcat) %dir %{cachedir}
+%attr(0770,root,tomcat) %dir %{tempdir}
+%attr(0770,root,tomcat) %dir %{workdir}
 %defattr(0664,root,tomcat,0775)
 %attr(0775,root,tomcat) %dir %{appdir}
-%attr(0755,root,tomcat) %dir %{confdir}
 %attr(0775,root,tomcat) %dir %{confdir}/Catalina
 %attr(0775,root,tomcat) %dir %{confdir}/Catalina/localhost
 %attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/%{name}.conf
@@ -488,11 +495,6 @@ fi
 %attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/log4j.properties
 %attr(0660,tomcat,tomcat) %config(noreplace) %{confdir}/tomcat-users.xml
 %attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/web.xml
-%attr(0775,root,tomcat) %dir %{cachedir}
-%attr(0775,root,tomcat) %dir %{tempdir}
-%attr(0775,root,tomcat) %dir %{workdir}
-%attr(0775,root,tomcat) %dir %{logdir}
-%attr(0664,tomcat,tomcat) %{logdir}/catalina.out
 %dir %{homedir}
 %{bindir}/bootstrap.jar
 %{bindir}/catalina-tasks.xml
@@ -510,7 +512,7 @@ fi
 %exclude %{_mavenpomdir}/*api*
 
 %files admin-webapps
-%defattr(0664,root,tomcat,0775)
+%defattr(0664,root,tomcat,0755)
 %{appdir}/host-manager
 %{appdir}/manager
 
@@ -536,6 +538,7 @@ fi
 
 %files servlet-%{servletspec}-api
 %defattr(-,root,root,-)
+%doc LICENSE
 %{_javadir}/%{name}-servlet-%{servletspec}*.jar
 %{_javadir}/%{name}-servlet-api.jar
 %{_mavendepmapfragdir}/%{name}-servlet-api
@@ -543,6 +546,7 @@ fi
 
 %files el-%{elspec}-api
 %defattr(-,root,root,-)
+%doc LICENSE
 %{_javadir}/%{name}-el-%{elspec}-api.jar
 %{_javadir}/%{name}-el-api.jar
 %{_javadir}/%{name}/%{name}-el-%{elspec}-api.jar
@@ -555,10 +559,16 @@ fi
 %{appdir}/sample
 
 %changelog
-* Mon May 14 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.14-1
+* Sat May 21 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.14-2
+- Fixed http source link
+- Securify some permissions
+- Added licenses for el-api and servlet-api
+- Added dependency on jpackage-utils for the javadoc subpackage
+
+* Sat May 14 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.14-1
 - Updated to 7.0.14
 
-* Mon May 5 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.12-4
+* Thu May 5 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.12-4
 - Provided local paths for libs
 - Fixed dependencies
 - Fixed update temp/work cleanup
