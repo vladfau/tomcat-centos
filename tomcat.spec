@@ -40,20 +40,21 @@
 # FHS 2.3 compliant tree structure - http://www.pathname.com/fhs/2.3/
 %global basedir %{_var}/lib/%{name}
 %global appdir %{basedir}/webapps
-%global bindir %{_datadir}/%{name}/bin
-%global confdir %{_sysconfdir}/%{name}
 %global homedir %{_datadir}/%{name}
+%global bindir %{homedir}/bin
+%global confdir %{_sysconfdir}/%{name}
 %global libdir %{_javadir}/%{name}
 %global logdir %{_var}/log/%{name}
 %global cachedir %{_var}/cache/%{name}
 %global tempdir %{cachedir}/temp
 %global workdir %{cachedir}/work
 %global _initrddir %{_sysconfdir}/init.d
+%global _systemddir /lib/systemd/system
 
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       3%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -70,6 +71,7 @@ Source7:       %{name}-%{major_version}.%{minor_version}-tool-wrapper.script
 Source8:       servlet-api-OSGi-MANIFEST.MF
 Source9:       jsp-api-OSGi-MANIFEST.MF
 Source10:      %{name}-%{major_version}.%{minor_version}-log4j.properties
+Source11:      %{name}-%{major_version}.%{minor_version}.service
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
 
@@ -272,6 +274,7 @@ zip -u output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_sbindir}
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_javadocdir}/%{name}
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_initrddir}
+%{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_systemddir}
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_sysconfdir}/logrotate.d
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{appdir}
@@ -310,6 +313,8 @@ popd
     ${RPM_BUILD_ROOT}%{_initrddir}/%{name}
 %{__install} -m 0644 %{SOURCE4} \
     ${RPM_BUILD_ROOT}%{_sbindir}/%{name}
+%{__install} -m 0644 %{SOURCE11} \
+    ${RPM_BUILD_ROOT}%{_systemddir}/%{name}.service
 %{__ln_s} %{name} ${RPM_BUILD_ROOT}%{_sbindir}/d%{name}
 %{__sed} -e "s|\@\@\@TCLOG\@\@\@|%{logdir}|g" %{SOURCE5} \
     > ${RPM_BUILD_ROOT}%{_sysconfdir}/logrotate.d/%{name}
@@ -473,6 +478,7 @@ fi
 %attr(0755,root,root) %{_sbindir}/d%{name}
 %attr(0755,root,root) %{_sbindir}/%{name}
 %attr(0755,root,root) %{_initrddir}/%{name}
+%attr(0644,root,root) %{_systemddir}/%{name}.service
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %attr(0765,root,tomcat) %dir %{basedir}
@@ -549,7 +555,7 @@ fi
 %doc LICENSE
 %{_javadir}/%{name}-el-%{elspec}-api.jar
 %{_javadir}/%{name}-el-api.jar
-%{_javadir}/%{name}/%{name}-el-%{elspec}-api.jar
+%{libdir}/%{name}-el-%{elspec}-api.jar
 %{_mavenpomdir}/JPP-%{name}-tomcat-el-api.pom
 
 %files webapps
@@ -559,6 +565,10 @@ fi
 %{appdir}/sample
 
 %changelog
+* Mon Jun 6 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.14-3
+- Added initial systemd service
+- Fix some paths 
+
 * Sat May 21 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.14-2
 - Fixed http source link
 - Securify some permissions

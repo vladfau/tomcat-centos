@@ -1,0 +1,13 @@
+[Unit]
+Description=Release implementation for Servlet 3.0 and JSP 2.2
+After=syslog.target network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/tomcat.pid
+EnvironmentFile=/etc/sysconfig/tomcat
+ExecStart=/etc/init.d/tomcat start
+ExecStop=/etc/init.d/tomcat stop
+
+[Install]
+WantedBy=multi-user.target
