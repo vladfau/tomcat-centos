@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -72,6 +72,11 @@ Source8:       servlet-api-OSGi-MANIFEST.MF
 Source9:       jsp-api-OSGi-MANIFEST.MF
 Source10:      %{name}-%{major_version}.%{minor_version}-log4j.properties
 Source11:      %{name}-%{major_version}.%{minor_version}.service
+Source12:      el-api-OSGi-MANIFEST.MF
+Source13:      jasper-el-OSGi-MANIFEST.MF
+Source14:      jasper-OSGi-MANIFEST.MF
+Source15:      tomcat-api-OSGi-MANIFEST.MF
+Source16:      tomcat-juli-OSGi-MANIFEST.MF
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
 
@@ -267,6 +272,21 @@ zip -u output/build/lib/servlet-api.jar META-INF/MANIFEST.MF
 cp -p %{SOURCE9} META-INF/MANIFEST.MF
 touch META-INF/MANIFEST.MF
 zip -u output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
+cp -p %{SOURCE12} META-INF/MANIFEST.MF
+touch META-INF/MANIFEST.MF
+zip -u output/build/lib/el-api.jar META-INF/MANIFEST.MF
+cp -p %{SOURCE13} META-INF/MANIFEST.MF
+touch META-INF/MANIFEST.MF
+zip -u output/build/lib/jasper-el.jar META-INF/MANIFEST.MF
+cp -p %{SOURCE14} META-INF/MANIFEST.MF
+touch META-INF/MANIFEST.MF
+zip -u output/build/lib/jasper.jar META-INF/MANIFEST.MF
+cp -p %{SOURCE15} META-INF/MANIFEST.MF
+touch META-INF/MANIFEST.MF
+zip -u output/build/lib/tomcat-api.jar META-INF/MANIFEST.MF
+cp -p %{SOURCE16} META-INF/MANIFEST.MF
+touch META-INF/MANIFEST.MF
+zip -u output/build/bin/tomcat-juli.jar META-INF/MANIFEST.MF
 
 %install
 # build initial path structure
@@ -565,6 +585,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Tue Sep 20 2011 Roland Grunberg <rgrunber@redhat.com> 0:7.0.21-2
+- Add manifests for el-api, jasper-el, jasper, tomcat, and tomcat-juli.
+
 * Thu Sep 8 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.21-1
 - Updated to 7.0.21
 
