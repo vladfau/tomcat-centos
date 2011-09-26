@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       3%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -501,7 +501,7 @@ fi
 %attr(0644,root,root) %{_systemddir}/%{name}.service
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
-%attr(0765,root,tomcat) %dir %{basedir}
+%attr(0755,root,tomcat) %dir %{basedir}
 %attr(0755,root,tomcat) %dir %{confdir}
 %defattr(0664,root,tomcat,0770)
 %attr(0770,root,tomcat) %dir %{logdir}
@@ -585,6 +585,9 @@ fi
 %{appdir}/sample
 
 %changelog
+* Mon Sep 26 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.21-3
+- Fix basedir mode
+
 * Tue Sep 20 2011 Roland Grunberg <rgrunber@redhat.com> 0:7.0.21-2
 - Add manifests for el-api, jasper-el, jasper, tomcat, and tomcat-juli.
 
