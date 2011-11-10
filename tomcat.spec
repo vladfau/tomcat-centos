@@ -524,8 +524,6 @@ fi
 %dir %{homedir}
 %{bindir}/bootstrap.jar
 %{bindir}/catalina-tasks.xml
-%{bindir}/tomcat-juli.jar
-%{libdir}/tomcat-juli.jar
 %{homedir}/lib
 %{homedir}/temp
 %{homedir}/webapps
@@ -559,7 +557,7 @@ fi
 %files lib
 %defattr(-,root,root,-)
 %{libdir}
-%exclude %{libdir}/tomcat-juli.jar
+%{bindir}/tomcat-juli.jar
 %exclude %{libdir}/%{name}-el-%{elspec}-api.jar
 
 %files servlet-%{servletspec}-api
