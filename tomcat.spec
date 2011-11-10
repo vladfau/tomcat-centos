@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -77,6 +77,7 @@ Source13:      jasper-el-OSGi-MANIFEST.MF
 Source14:      jasper-OSGi-MANIFEST.MF
 Source15:      tomcat-api-OSGi-MANIFEST.MF
 Source16:      tomcat-juli-OSGi-MANIFEST.MF
+Source17:      %{name}-%{major_version}.%{minor_version}-tomcat-sysd
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
 
@@ -97,6 +98,7 @@ BuildRequires: junit
 BuildRequires: log4j
 BuildRequires: geronimo-jaxrpc
 BuildRequires: wsdl4j
+BuildRequires: systemd-units
 Requires:      apache-commons-daemon
 Requires:      apache-commons-logging
 Requires:      apache-commons-collections
@@ -110,8 +112,9 @@ Requires(post):   chkconfig
 Requires(preun):  chkconfig
 Requires(post):   redhat-lsb
 Requires(preun):  redhat-lsb
-Requires(post):   jpackage-utils
-Requires(postun): jpackage-utils
+Requires(post):   systemd-units
+Requires(preun):  systemd-units
+Requires(postun): systemd-units
 
 %description
 Tomcat is the servlet container that is used in the official Reference
@@ -146,6 +149,14 @@ Requires: jpackage-utils
 
 %description javadoc
 Javadoc generated documentation for Apache Tomcat.
+
+%package systemv
+Group: System Environment/Daemons
+Summary: Systemv scripts for Apache Tomcat
+Requires: %{name} = %{epoch}:%{version}-%{release}
+
+%description systemv
+SystemV scripts to start and stop tomcat service
 
 %package jsp-%{jspspec}-api
 Group: Development/Libraries
@@ -308,6 +319,7 @@ zip -u output/build/bin/tomcat-juli.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{homedir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{tempdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{workdir}
+%{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_unitdir}
 
 # move things into place
 # First copy supporting libs to tomcat lib
@@ -334,7 +346,9 @@ popd
 %{__install} -m 0644 %{SOURCE4} \
     ${RPM_BUILD_ROOT}%{_sbindir}/%{name}
 %{__install} -m 0644 %{SOURCE11} \
-    ${RPM_BUILD_ROOT}%{_systemddir}/%{name}.service
+    ${RPM_BUILD_ROOT}%{_unitdir}/%{name}.service
+%{__install} -m 0644 %{SOURCE17} \
+    ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-sysd
 %{__ln_s} %{name} ${RPM_BUILD_ROOT}%{_sbindir}/d%{name}
 %{__sed} -e "s|\@\@\@TCLOG\@\@\@|%{logdir}|g" %{SOURCE5} \
     > ${RPM_BUILD_ROOT}%{_sysconfdir}/logrotate.d/%{name}
@@ -444,7 +458,10 @@ done
 %post
 # install but don't activate
 /sbin/chkconfig --add %{name}
-%update_maven_depmap
+if [ $1 -eq 1 ]; then
+    #initial installation
+    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
+fi
 
 %post jsp-%{jspspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/jsp.jar jsp \
@@ -453,7 +470,6 @@ done
 %post servlet-%{servletspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/servlet.jar servlet \
     %{_javadir}/%{name}-servlet-%{servletspec}-api.jar 20500
-%update_maven_depmap
 
 %post el-%{elspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/elspec.jar elspec \
@@ -465,11 +481,18 @@ done
 if [ "$1" = "0" ]; then
     %{_initrddir}/%{name} stop >/dev/null 2>&1
     /sbin/chkconfig --del %{name}
+    # package removal, not upgrade
+    /bin/systemctl --no-reload disable tomcat.service > /dev/null 2>&1 || :
+    /bin/systemctl stop tomcat.service > /dev/null 2>&1 || :
 fi
 
-
 %postun
-%update_maven_depmap
+/bin/systemctl daemon-reload > /dev/null 2>&1 || :
+if [ $1 -ge 1 ]; then
+    #package upgrade, not uninstall
+    /bin/systemctl try-restart tomcat.service > /dev/null 2>&1 || :
+fi
+
 
 %postun jsp-%{jspspec}-api
 if [ "$1" = "0" ]; then
@@ -481,7 +504,6 @@ fi
 if [ "$1" = "0" ]; then
     %{_sbindir}/update-alternatives --remove servlet \
         %{_javadir}/%{name}-servlet-%{servletspec}-api.jar
-    %update_maven_depmap
 fi
 
 %postun el-%{elspec}-api
@@ -490,15 +512,20 @@ if [ "$1" = "0" ]; then
         %{_javadir}/%{name}-el-%{elspec}-api.jar
 fi
 
+%triggerun -- tomcat < 0:7.0.22-2
+/usr/bin/systemd-sysv-convert -- save tomcat > /dev/null 2>&1 || :
+# Run these becasue the SysV package being removed won't do them
+/sbin/chkconfig --del tomcat > /dev/null 2>&1 || :
+/bin/systemctl try-restart tomcat.service > /dev/null 2>&1 || :
+
 %files
 %defattr(0664,root,tomcat,0755)
 %doc {LICENSE,NOTICE,RELEASE*}
 %attr(0755,root,root) %{_bindir}/%{name}-digest
 %attr(0755,root,root) %{_bindir}/%{name}-tool-wrapper
-%attr(0755,root,root) %{_sbindir}/d%{name}
 %attr(0755,root,root) %{_sbindir}/%{name}
-%attr(0755,root,root) %{_initrddir}/%{name}
-%attr(0644,root,root) %{_systemddir}/%{name}.service
+%attr(0644,root,root) %{_unitdir}/%{name}.service
+%attr(0755,root,root) %{_sbindir}/%{name}-sysd
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %attr(0755,root,tomcat) %dir %{basedir}
@@ -582,7 +609,17 @@ fi
 %{appdir}/examples
 %{appdir}/sample
 
+%files systemv
+%defattr(755,root,root,0755)
+%{_sbindir}/d%{name}
+%{_initrddir}/%{name}
+
 %changelog
+* Fri Nov 11 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.22-2
+- Move tomcat-juli.jar to lib package 
+- Drop %%update_maven_depmap as in tomcat6
+- Provide native systemd unit file ported from tomcat6
+
 * Thu Oct 6 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.22-1
 - Updated to 7.0.22
 

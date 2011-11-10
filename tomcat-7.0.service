@@ -1,13 +1,19 @@
+# Systemd unit file for tomcat
+# 
+# To create clones of this service:
+# 1) By default SERVICE_NAME=tomcat. When cloned, the value must be defined 
+# before tomcat-sysd is called.
+# 2) Create /etc/sysconfig/${SERVICE_NAME} from /etc/sysconfig/tomcat
+# to override tomcat defaults
+
 [Unit]
-Description=Release implementation for Servlet 3.0 and JSP 2.2
+Description=Apache Tomcat Web Application Container
 After=syslog.target network.target
 
 [Service]
 Type=forking
-PIDFile=/var/run/tomcat.pid
-EnvironmentFile=/etc/sysconfig/tomcat
-ExecStart=/etc/init.d/tomcat start
-ExecStop=/etc/init.d/tomcat stop
+ExecStart=/usr/sbin/tomcat-sysd start
+ExecStop=/usr/sbin/tomcat-sysd stop
 
 [Install]
 WantedBy=multi-user.target
