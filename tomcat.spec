@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -80,6 +80,8 @@ Source16:      tomcat-juli-OSGi-MANIFEST.MF
 Source17:      %{name}-%{major_version}.%{minor_version}-tomcat-sysd
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
+#https://issues.apache.org/bugzilla/show_bug.cgi?id=52450
+Patch2:        add_entity_resolver_setter.patch
 
 BuildArch:     noarch
 
@@ -226,7 +228,7 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 
 %patch0 -p0
 %patch1 -p0
-# %patch2 -p0
+%patch2 -p0
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
 
@@ -615,6 +617,9 @@ fi
 %{_initrddir}/%{name}
 
 %changelog
+* Wed Jan 11 2012 Alexander Kurtakov <akurtako@redhat.com> 0:7.0.23-2
+- Add EntityResolver setter patch to jasper for jetty's need. (patch sent upstream).
+
 * Mon Nov 28 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.23-1
 - Updated to 7.0.23
 
