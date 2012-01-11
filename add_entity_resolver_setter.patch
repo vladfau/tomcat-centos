@@ -1,0 +1,19 @@
+--- java/org/apache/jasper/xmlparser/ParserUtils.java.sav	2012-01-11 12:19:05.303081671 +0200
++++ java/org/apache/jasper/xmlparser/ParserUtils.java	2012-01-11 12:25:32.327526734 +0200
+@@ -132,6 +132,16 @@ public class ParserUtils {
+ 
+         return (parseXMLDocument(uri, new InputSource(is)));
+     }
++    
++    /**
++     * Set the EntityResolver.
++     * This is needed when the dtds and Jasper itself are in different classloaders (e.g. OSGi environment).
++     * 
++     * @parem er EntityResolver to use.
++     */
++    public static void setEntityResolver(EntityResolver er) {
++        entityResolver = er;
++    }
+ 
+ 
+     // ------------------------------------------------------ Protected Methods
