@@ -26,6 +26,15 @@ CLASSPATH="${CLASSPATH}:${CATALINA_HOME}/bin/bootstrap.jar"
 CLASSPATH="${CLASSPATH}:${CATALINA_HOME}/bin/tomcat-juli.jar"
 CLASSPATH="${CLASSPATH}:$(build-classpath commons-daemon 2>/dev/null)"
 
+# if jsvc installed and USE_JSVC=true
+# then use jsvc instead of calling java directly
+if [ -x /usr/bin/jsvc ] && [ "$USE_JSVC" = "true" ]; then
+  JAVACMD="/usr/bin/jsvc -nodetach -user ${TOMCAT_USER} -outfile ${CATALINA_BASE}/logs/catalina.out -errfile ${CATALINA_BASE}/logs/catalina.out"
+  if [ "$1" = "stop" ]; then
+    JAVACMD="${JAVACMD} -stop"
+  fi
+fi
+
 if [ "$1" = "start" ]; then
   ${JAVACMD} $JAVA_OPTS $CATALINA_OPTS \
     -classpath "$CLASSPATH" \

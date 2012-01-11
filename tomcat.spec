@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -615,6 +615,13 @@ fi
 %{_initrddir}/%{name}
 
 %changelog
+* Mon Dec 12 2011 Joseph D. Wagner <joe@josephdwagner.info> 0:7.0.23-2
+- Added support to /usr/sbin/tomcat-sysd and /usr/sbin/tomcat for
+  starting tomcat with jsvc, which allows tomcat to perform some
+  privileged operations (e.g. bind to a port < 1024) and then switch
+  identity to a non-privileged user. Must add USE_JSVC="true" to
+  /etc/tomcat/tomcat.conf or /etc/sysconfig/tomcat.
+
 * Mon Nov 28 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.23-1
 - Updated to 7.0.23
 
