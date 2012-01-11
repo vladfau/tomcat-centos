@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       4%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -78,6 +78,11 @@ Source14:      jasper-OSGi-MANIFEST.MF
 Source15:      tomcat-api-OSGi-MANIFEST.MF
 Source16:      tomcat-juli-OSGi-MANIFEST.MF
 Source17:      %{name}-%{major_version}.%{minor_version}-tomcat-sysd
+Source18:      %{name}-%{major_version}.%{minor_version}-tomcat-jsvc-sysd
+Source19:      %{name}-%{major_version}.%{minor_version}-jsvc.wrapper
+Source20:      %{name}-%{major_version}.%{minor_version}-jsvc.service
+
+
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
 #https://issues.apache.org/bugzilla/show_bug.cgi?id=52450
@@ -159,6 +164,17 @@ Requires: %{name} = %{epoch}:%{version}-%{release}
 
 %description systemv
 SystemV scripts to start and stop tomcat service
+
+%package jsvc
+Group: System Environment/Daemons
+Summary: Apache jsvc wrapper for Apache Tomcat as separate service
+Requires: %{name} = %{epoch}:%{version}-%{release}
+Requires: apache-commons-daemon-jsvc
+
+%description jsvc
+Systemd service and wrapper scripts to start tomcat with jsvc, 
+which allows tomcat to perform some privileged operations
+(e.g. bind to a port < 1024) and then switch identity to a non-privileged user.
 
 %package jsp-%{jspspec}-api
 Group: Development/Libraries
@@ -351,6 +367,12 @@ popd
     ${RPM_BUILD_ROOT}%{_unitdir}/%{name}.service
 %{__install} -m 0644 %{SOURCE17} \
     ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-sysd
+%{__install} -m 0644 %{SOURCE19} \
+    ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-jsvc
+%{__install} -m 0644 %{SOURCE20} \
+    ${RPM_BUILD_ROOT}%{_unitdir}/%{name}-jsvc.service
+%{__install} -m 0644 %{SOURCE18} \
+    ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-jsvc-sysd
 %{__ln_s} %{name} ${RPM_BUILD_ROOT}%{_sbindir}/d%{name}
 %{__sed} -e "s|\@\@\@TCLOG\@\@\@|%{logdir}|g" %{SOURCE5} \
     > ${RPM_BUILD_ROOT}%{_sysconfdir}/logrotate.d/%{name}
@@ -616,16 +638,25 @@ fi
 %{_sbindir}/d%{name}
 %{_initrddir}/%{name}
 
+%files jsvc
+%defattr(755,root,root,0755)
+%{_sbindir}/%{name}-jsvc
+%{_sbindir}/%{name}-jsvc-sysd
+%attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
+
 %changelog
+* Wed Jan 12 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.23-4
+- Move jsvc support to subpackage
+
+* Wed Jan 11 2012 Alexander Kurtakov <akurtako@redhat.com> 0:7.0.23-2
+- Add EntityResolver setter patch to jasper for jetty's need. (patch sent upstream).
+
 * Mon Dec 12 2011 Joseph D. Wagner <joe@josephdwagner.info> 0:7.0.23-3
 - Added support to /usr/sbin/tomcat-sysd and /usr/sbin/tomcat for
   starting tomcat with jsvc, which allows tomcat to perform some
   privileged operations (e.g. bind to a port < 1024) and then switch
   identity to a non-privileged user. Must add USE_JSVC="true" to
   /etc/tomcat/tomcat.conf or /etc/sysconfig/tomcat.
-
-* Wed Jan 11 2012 Alexander Kurtakov <akurtako@redhat.com> 0:7.0.23-2
-- Add EntityResolver setter patch to jasper for jetty's need. (patch sent upstream).
 
 * Mon Nov 28 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.23-1
 - Updated to 7.0.23

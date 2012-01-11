@@ -22,7 +22,7 @@ else
 fi
 
 # Path to the tomcat launch script
-TOMCAT_SCRIPT="/usr/sbin/tomcat"
+TOMCAT_SCRIPT="/usr/sbin/tomcat-jsvc"
         
 # Define the tomcat username
 TOMCAT_USER="${TOMCAT_USER:-tomcat}"
@@ -72,6 +72,12 @@ function start() {
       chown ${TOMCAT_USER}:${TOMCAT_USER} $TOMCAT_LOG
     fi
 
+    # if jsvc installed and USE_JSVC=true
+    # then start as root and use jsvc to drop privileges
+    if [ -x /usr/bin/jsvc ]; then
+      TOMCAT_USER="root"
+    fi
+
     parseOptions  
     if [ "$SECURITY_MANAGER" = "true" ]; then
        $SU - $TOMCAT_USER -c "${TOMCAT_SCRIPT} start-security" >> $TOMCAT_LOG 2>&1 
@@ -81,6 +87,12 @@ function start() {
 }
 
 function stop() {
+    # if jsvc installed and USE_JSVC=true
+    # then start as root and use jsvc to drop privileges
+    if [ -x /usr/bin/jsvc ]; then
+      TOMCAT_USER="root"
+    fi
+
     parseOptions  
     $SU - $TOMCAT_USER -c "${TOMCAT_SCRIPT} stop" >> $TOMCAT_LOG 2>&1
 }
