@@ -6,5 +6,11 @@ Bundle-Name: %bundleName
 Bundle-Localization: plugin
 Bundle-Version: 3.0.0
 Bundle-Vendor: %bundleProvider
-Export-Package: javax.servlet;version="3.0",javax.servlet.http;version
- ="3.0",javax.servlet.resources;version="3.0"
+Export-Package: javax.servlet;version="3.0",
+ javax.servlet;version="2.6",
+ javax.servlet.http;version="3.0",
+ javax.servlet.http;version="2.6",
+ javax.servlet.annotation;version="2.6",
+ javax.servlet.descriptor;version="2.6",
+ javax.servlet.resources;version="3.0",
+ javax.servlet.resources;version="2.6"
