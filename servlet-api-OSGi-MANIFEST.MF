@@ -11,6 +11,7 @@ Export-Package: javax.servlet;version="3.0",
  javax.servlet.http;version="3.0",
  javax.servlet.http;version="2.6",
  javax.servlet.annotation;version="2.6",
+ javax.servlet.descriptor;version="3.0",
  javax.servlet.descriptor;version="2.6",
  javax.servlet.resources;version="3.0",
  javax.servlet.resources;version="2.6"
