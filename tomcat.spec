@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -409,8 +409,8 @@ pushd ${RPM_BUILD_ROOT}%{libdir}
     %{__ln_s} $(build-classpath log4j) log4j.jar
     %{__ln_s} $(build-classpath ecj) jasper-jdt.jar
 
-    # Link the juli jar here from /usr/share/java/tomcat
-    %{__ln_s} %{bindir}/tomcat-juli.jar .
+    # Temporary copy the juli jar here from /usr/share/java/tomcat (for maven depmap)
+    %{__cp} -a ${RPM_BUILD_ROOT}%{bindir}/tomcat-juli.jar ./
 popd
 
 # symlink to the FHS locations where we've installed things
@@ -463,6 +463,10 @@ done
 
 %{__cp} -a tomcat-juli.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-juli.pom
 %add_maven_depmap JPP.%{name}-tomcat-juli.pom %{name}/tomcat-juli.jar
+
+# replace temporary copy with link
+%{__ln_s} -f %{bindir}/tomcat-juli.jar ${RPM_BUILD_ROOT}%{libdir}/
+
 
 %pre
 # add the tomcat user and group
@@ -644,6 +648,9 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Sun Jan 22 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.25-2
+- Added hack for maven depmap of tomcat-juli absolute link [ -f ] pass correctly
+
 * Sat Jan 21 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.25-1
 - Updated to 7.0.25
 - Removed EntityResolver patch (changes already in upstream sources)
