@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 23
+%global micro_version 25
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       5%{?dist}
+Release:       1%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -85,8 +85,8 @@ Source20:      %{name}-%{major_version}.%{minor_version}-jsvc.service
 
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
-#https://issues.apache.org/bugzilla/show_bug.cgi?id=52450
-Patch2:        add_entity_resolver_setter.patch
+#https://issues.apache.org/bugzilla/show_bug.cgi?id=52493
+Patch2:        add_parent_logger_getter.patch
 
 BuildArch:     noarch
 
@@ -99,7 +99,7 @@ BuildRequires: apache-commons-daemon
 BuildRequires: apache-commons-dbcp
 BuildRequires: apache-commons-pool
 BuildRequires: jakarta-taglibs-standard
-BuildRequires: java-devel = 1:1.6.0 
+BuildRequires: java-devel >= 1:1.6.0 
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
 BuildRequires: log4j
@@ -111,7 +111,7 @@ Requires:      apache-commons-logging
 Requires:      apache-commons-collections
 Requires:      apache-commons-dbcp
 Requires:      apache-commons-pool
-Requires:      java = 1:1.6.0
+Requires:      java >= 1:1.6.0
 Requires:      procps
 Requires:      %{name}-lib = %{epoch}:%{version}-%{release}
 Requires(pre):    shadow-utils
@@ -161,6 +161,8 @@ Javadoc generated documentation for Apache Tomcat.
 Group: System Environment/Daemons
 Summary: Systemv scripts for Apache Tomcat
 Requires: %{name} = %{epoch}:%{version}-%{release}
+Requires(post): chkconfig
+Requires(postun): chkconfig
 
 %description systemv
 SystemV scripts to start and stop tomcat service
@@ -182,8 +184,6 @@ Summary: Apache Tomcat JSP API implementation classes
 Provides: jsp = %{jspspec}
 Provides: jsp22
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
-Requires(post): chkconfig
-Requires(postun): chkconfig
 
 %description jsp-%{jspspec}-api
 Apache Tomcat JSP API implementation classes.
@@ -210,8 +210,6 @@ Summary: Apache Tomcat Servlet API implementation classes
 Provides: servlet = %{servletspec}
 Provides: servlet6
 Provides: servlet3
-Requires(post): chkconfig
-Requires(postun): chkconfig
 
 %description servlet-%{servletspec}-api
 Apache Tomcat Servlet API implementation classes.
@@ -221,8 +219,6 @@ Group: Development/Libraries
 Summary: Expression Language v1.0 API
 Provides: el_1_0_api = %{epoch}:%{version}-%{release}
 Provides: el_api = %{elspec}
-Requires(post): chkconfig
-Requires(postun): chkconfig
 
 %description el-%{elspec}-api
 Expression Language 1.0.
@@ -435,13 +431,6 @@ popd
 %{__rm} ${RPM_BUILD_ROOT}%{appdir}/docs/appdev/sample/sample.war
 
 
-# Generate a depmap fragment javax.servlet:servlet-api pointing to
-# tomcat-servlet-3.0-api for backwards compatibility
-%add_to_maven_depmap javax.servlet servlet-api %{servletspec} JPP %{name}-servlet-%{servletspec}-api
-# also provide jetty depmap (originally in jetty package, but it's cleaner to have it here)
-%add_to_maven_depmap org.mortbay.jetty servlet-api %{servletspec} JPP %{name}-servlet-%{servletspec}-api
-mv %{buildroot}%{_mavendepmapfragdir}/%{name} %{buildroot}%{_mavendepmapfragdir}/%{name}-servlet-api
-
 # Install the maven metadata
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_mavenpomdir}
 pushd output/dist/src/res/maven
@@ -451,27 +440,29 @@ for pom in *.pom; do
 done
 
 # we won't install dbcp, juli-adapters and juli-extras pom files
-for pom in tomcat-annotations-api.pom tomcat-catalina.pom tomcat-jasper-el.pom tomcat-jasper.pom \
-           tomcat-catalina-ha.pom tomcat-el-api.pom; do
-    %{__cp} -a $pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-$pom
-    base=`basename $pom .pom`
-    %add_to_maven_depmap org.apache.tomcat $base %{version} JPP/%{name} $base
+for libname in annotations-api catalina jasper-el jasper catalina-ha; do
+    %{__cp} -a %{name}-$libname.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-$libname.pom
+    %add_maven_depmap JPP.%{name}-$libname.pom %{name}/$libname.jar
 done
 
 # servlet-api jsp-api and el-api are not in tomcat subdir, since they are widely re-used elsewhere
-for pom in tomcat-jsp-api.pom tomcat-servlet-api.pom tomcat-el-api.pom;do
-    %{__cp} -a $pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-%{name}-$pom
-    base=`basename $pom .pom`
-    %add_to_maven_depmap org.apache.tomcat $base %{version} JPP %{name}-$base
+for libname in tomcat-jsp-api tomcat-el-api;do
+    %{__cp} -a $libname.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-$libname.pom
+    %add_maven_depmap JPP-$libname.pom $libname.jar -f "$libname"
 done
+
+%{__cp} -a tomcat-servlet-api.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-tomcat-servlet-api.pom
+# Generate a depmap fragment javax.servlet:servlet-api pointing to
+# tomcat-servlet-3.0-api for backwards compatibility
+# also provide jetty depmap (originally in jetty package, but it's cleaner to have it here
+%add_maven_depmap JPP-tomcat-servlet-api.pom tomcat-servlet-api.jar -f "tomcat-servlet-api" -a "javax.servlet:servlet-api,org.mortbay.jetty:servlet-api"
 
 # two special pom where jar files have different names
 %{__cp} -a tomcat-tribes.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-catalina-tribes.pom
-%add_to_maven_depmap org.apache.tomcat tribes %{version} JPP/%{name} catalina-tribes
+%add_maven_depmap JPP.%{name}-catalina-tribes.pom %{name}/catalina-tribes.jar
 
 %{__cp} -a tomcat-juli.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-juli.pom
-%add_to_maven_depmap org.apache.tomcat juli %{version} JPP/%{name} tomcat-juli
-
+%add_maven_depmap JPP.%{name}-tomcat-juli.pom %{name}/tomcat-juli.jar
 
 %pre
 # add the tomcat user and group
@@ -487,6 +478,10 @@ if [ $1 -eq 1 ]; then
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 fi
 
+%post systemv
+# install but don't activate
+/sbin/chkconfig --add %{name}
+
 %post jsp-%{jspspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/jsp.jar jsp \
     %{_javadir}/%{name}-jsp-%{jspspec}-api.jar 20100
@@ -499,12 +494,14 @@ fi
 %{_sbindir}/update-alternatives --install %{_javadir}/elspec.jar elspec \
    %{_javadir}/%{name}-el-%{elspec}-api.jar 20250
 
+%preun systemv
+    %{_initrddir}/%{name} stop >/dev/null 2>&1
+    /sbin/chkconfig --del %{name}
+
 %preun
 # clean tempdir and workdir on removal or upgrade
 %{__rm} -rf %{workdir}/* %{tempdir}/*
 if [ "$1" = "0" ]; then
-    %{_initrddir}/%{name} stop >/dev/null 2>&1
-    /sbin/chkconfig --del %{name}
     # package removal, not upgrade
     /bin/systemctl --no-reload disable tomcat.service > /dev/null 2>&1 || :
     /bin/systemctl stop tomcat.service > /dev/null 2>&1 || :
@@ -569,7 +566,6 @@ fi
 %attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/*.properties
 %attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/context.xml
 %attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/server.xml
-%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/log4j.properties
 %attr(0660,tomcat,tomcat) %config(noreplace) %{confdir}/tomcat-users.xml
 %attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/web.xml
 %dir %{homedir}
@@ -581,10 +577,6 @@ fi
 %{homedir}/work
 %{homedir}/logs
 %{homedir}/conf
-%{_mavendepmapfragdir}/%{name}
-%{_mavenpomdir}/*.pom
-# Exclude the POMs that are in sub-packages
-%exclude %{_mavenpomdir}/*api*
 
 %files admin-webapps
 %defattr(0664,root,tomcat,0755)
@@ -603,12 +595,17 @@ fi
 %defattr(-,root,root,-)
 %{_javadir}/%{name}-jsp-%{jspspec}*.jar
 %{_javadir}/%{name}-jsp-api.jar
-%{_mavenpomdir}/JPP-%{name}-tomcat-jsp-api.pom
+%{_mavenpomdir}/JPP-%{name}-jsp-api.pom
+%{_mavendepmapfragdir}/%{name}-tomcat-jsp-api
 
 %files lib
 %defattr(-,root,root,-)
 %{libdir}
 %{bindir}/tomcat-juli.jar
+%{_mavendepmapfragdir}/%{name}
+%{_mavenpomdir}/*.pom
+# Exclude the POMs that are in sub-packages
+%exclude %{_mavenpomdir}/JPP-*api*.pom
 %exclude %{libdir}/%{name}-el-%{elspec}-api.jar
 
 %files servlet-%{servletspec}-api
@@ -616,8 +613,8 @@ fi
 %doc LICENSE
 %{_javadir}/%{name}-servlet-%{servletspec}*.jar
 %{_javadir}/%{name}-servlet-api.jar
-%{_mavendepmapfragdir}/%{name}-servlet-api
-%{_mavenpomdir}/JPP-%{name}-tomcat-servlet-api.pom
+%{_mavendepmapfragdir}/%{name}-tomcat-servlet-api
+%{_mavenpomdir}/JPP-%{name}-servlet-api.pom
 
 %files el-%{elspec}-api
 %defattr(-,root,root,-)
@@ -625,7 +622,9 @@ fi
 %{_javadir}/%{name}-el-%{elspec}-api.jar
 %{_javadir}/%{name}-el-api.jar
 %{libdir}/%{name}-el-%{elspec}-api.jar
-%{_mavenpomdir}/JPP-%{name}-tomcat-el-api.pom
+%{_mavenpomdir}/JPP-%{name}-el-api.pom
+%{_mavendepmapfragdir}/%{name}-tomcat-el-api
+
 
 %files webapps
 %defattr(0644,tomcat,tomcat,0755)
@@ -645,11 +644,21 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Sat Jan 21 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.25-1
+- Updated to 7.0.25
+- Removed EntityResolver patch (changes already in upstream sources)
+- Place poms and depmaps in the same package as jars
+- Added javax.servlet.descriptor to export-package of servlet-api
+- Move several chkconfig actions and reqs to systemv subpackage
+- New maven depmaps generation method
+- Add patch to support java7. (patch sent upstream). 
+- Require java >= 1:1.6.0
+
 * Fri Jan 13 2012 Krzysztof Daniel <kdaniel@redhat.com> 0:7.0.23-5
 - Exported javax.servlet.* packages in version 3.0 as 2.6 to make
   servlet-api compatible with Eclipse.
 
-* Wed Jan 12 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.23-4
+* Thu Jan 12 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.23-4
 - Move jsvc support to subpackage
 
 * Wed Jan 11 2012 Alexander Kurtakov <akurtako@redhat.com> 0:7.0.23-2
