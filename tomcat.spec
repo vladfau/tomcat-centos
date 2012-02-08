@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       3%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -98,7 +98,7 @@ BuildRequires: apache-commons-collections
 BuildRequires: apache-commons-daemon
 BuildRequires: apache-commons-dbcp
 BuildRequires: apache-commons-pool
-BuildRequires: jakarta-taglibs-standard
+BuildRequires: jakarta-taglibs-standard >= 0:1.1.2-4
 BuildRequires: java-devel >= 1:1.6.0 
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
@@ -227,7 +227,7 @@ Expression Language 1.0.
 Group: Applications/Internet
 Summary: The ROOT and examples web applications for Apache Tomcat
 Requires: %{name} = %{epoch}:%{version}-%{release}
-Requires: jakarta-taglibs-standard >= 0:1.1
+Requires: jakarta-taglibs-standard >= 0:1.1.2-4
 
 %description webapps
 The ROOT and examples web applications for Apache Tomcat.
@@ -648,6 +648,9 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Wed Feb 8 2012 Krzysztof Daniel <kdaniel@redhat.com> 0:7.0.25-3
+- Dropped indirect dependecy to tomcat 5
+
 * Sun Jan 22 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.25-2
 - Added hack for maven depmap of tomcat-juli absolute link [ -f ] pass correctly
 
