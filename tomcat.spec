@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       3%{?dist}
+Release:       4%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -488,15 +488,15 @@ fi
 
 %post jsp-%{jspspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/jsp.jar jsp \
-    %{_javadir}/%{name}-jsp-%{jspspec}-api.jar 20100
+    %{_javadir}/%{name}-jsp-%{jspspec}-api.jar 20200
 
 %post servlet-%{servletspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/servlet.jar servlet \
-    %{_javadir}/%{name}-servlet-%{servletspec}-api.jar 20500
+    %{_javadir}/%{name}-servlet-%{servletspec}-api.jar 30000
 
 %post el-%{elspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/elspec.jar elspec \
-   %{_javadir}/%{name}-el-%{elspec}-api.jar 20250
+   %{_javadir}/%{name}-el-%{elspec}-api.jar 20300
 
 %preun systemv
     %{_initrddir}/%{name} stop >/dev/null 2>&1
@@ -648,6 +648,9 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Thu Feb 16 2012 Krzysztof Daniel <kdaniel@redhat.com> 0:7.0.25-4
+- Bug 790694: Priorities of jsp, servlet and el packages updated.
+
 * Wed Feb 8 2012 Krzysztof Daniel <kdaniel@redhat.com> 0:7.0.25-3
 - Dropped indirect dependecy to tomcat 5
 
