@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -464,6 +464,12 @@ done
 %{__cp} -a tomcat-juli.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-juli.pom
 %add_maven_depmap JPP.%{name}-tomcat-juli.pom %{name}/tomcat-juli.jar
 
+%{__cp} -a tomcat-api.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-api.pom
+%add_maven_depmap JPP.%{name}-tomcat-api.pom %{name}/tomcat-api.jar
+
+%{__cp} -a tomcat-util.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-util.pom
+%add_maven_depmap JPP.%{name}-tomcat-util.pom %{name}/tomcat-util.jar
+
 # replace temporary copy with link
 %{__ln_s} -f %{bindir}/tomcat-juli.jar ${RPM_BUILD_ROOT}%{libdir}/
 
@@ -607,9 +613,16 @@ fi
 %{libdir}
 %{bindir}/tomcat-juli.jar
 %{_mavendepmapfragdir}/%{name}
-%{_mavenpomdir}/*.pom
-# Exclude the POMs that are in sub-packages
-%exclude %{_mavenpomdir}/JPP-*api*.pom
+%{_mavenpomdir}/JPP.%{name}-annotations-api.pom
+%{_mavenpomdir}/JPP.%{name}-catalina-ha.pom
+%{_mavenpomdir}/JPP.%{name}-catalina-tribes.pom
+%{_mavenpomdir}/JPP.%{name}-catalina.pom
+%{_mavenpomdir}/JPP.%{name}-jasper-el.pom
+%{_mavenpomdir}/JPP.%{name}-jasper.pom
+%{_mavenpomdir}/JPP.%{name}-tomcat-api.pom
+%{_mavenpomdir}/JPP.%{name}-tomcat-juli.pom
+%{_mavenpomdir}/JPP.%{name}-tomcat-util.pom
+
 %exclude %{libdir}/%{name}-el-%{elspec}-api.jar
 
 %files servlet-%{servletspec}-api
@@ -648,6 +661,9 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Wed Mar 14 2012 Juan Hernandez <juan.hernandez@redhat.com> 0:7.0.26-2
+- Added the POM files for tomcat-api and tomcat-util (#803495)
+
 * Wed Feb 22 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.26-1
 - Updated to 7.0.26
 - Bug 790334: Change ownership of logdir for logrotate
