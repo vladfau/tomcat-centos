@@ -99,7 +99,7 @@ BuildRequires: apache-commons-daemon
 BuildRequires: apache-commons-dbcp
 BuildRequires: apache-commons-pool
 BuildRequires: jakarta-taglibs-standard >= 0:1.1.2-4
-BuildRequires: java-devel >= 1:1.6.0 
+BuildRequires: java-devel >= 1:1.6.0
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
 BuildRequires: log4j
@@ -174,7 +174,7 @@ Requires: %{name} = %{epoch}:%{version}-%{release}
 Requires: apache-commons-daemon-jsvc
 
 %description jsvc
-Systemd service and wrapper scripts to start tomcat with jsvc, 
+Systemd service and wrapper scripts to start tomcat with jsvc,
 which allows tomcat to perform some privileged operations
 (e.g. bind to a port < 1024) and then switch identity to a non-privileged user.
 
@@ -446,16 +446,17 @@ for libname in annotations-api catalina jasper-el jasper catalina-ha; do
 done
 
 # servlet-api jsp-api and el-api are not in tomcat subdir, since they are widely re-used elsewhere
-for libname in tomcat-jsp-api tomcat-el-api;do
-    %{__cp} -a $libname.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-$libname.pom
-    %add_maven_depmap JPP-$libname.pom $libname.jar -f "$libname"
-done
+%{__cp} -a tomcat-jsp-api.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-tomcat-jsp-api.pom
+%add_maven_depmap JPP-tomcat-jsp-api.pom tomcat-jsp-api.jar -f "tomcat-jsp-api" -a "javax.servlet.jsp:javax.servlet.jsp-api,javax.servlet:jsp-api"
+
+%{__cp} -a tomcat-el-api.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-tomcat-el-api.pom
+%add_maven_depmap JPP-tomcat-el-api.pom tomcat-el-api.jar -f "tomcat-el-api" -a "javax.el:javax.el-api,javax.el:el-api"
 
 %{__cp} -a tomcat-servlet-api.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-tomcat-servlet-api.pom
 # Generate a depmap fragment javax.servlet:servlet-api pointing to
 # tomcat-servlet-3.0-api for backwards compatibility
 # also provide jetty depmap (originally in jetty package, but it's cleaner to have it here
-%add_maven_depmap JPP-tomcat-servlet-api.pom tomcat-servlet-api.jar -f "tomcat-servlet-api" -a "javax.servlet:servlet-api,org.mortbay.jetty:servlet-api"
+%add_maven_depmap JPP-tomcat-servlet-api.pom tomcat-servlet-api.jar -f "tomcat-servlet-api" -a "javax.servlet:servlet-api,javax.servlet:javax.servlet-api,org.mortbay.jetty:servlet-api"
 
 # two special pom where jar files have different names
 %{__cp} -a tomcat-tribes.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-catalina-tribes.pom
@@ -661,6 +662,9 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Wed Mar 21 2012 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:7.0.26-2
+- Add more depmaps to J2EE apis to help jetty/glassfish updates
+
 * Wed Mar 14 2012 Juan Hernandez <juan.hernandez@redhat.com> 0:7.0.26-2
 - Added the POM files for tomcat-api and tomcat-util (#803495)
 
@@ -684,7 +688,7 @@ fi
 - Added javax.servlet.descriptor to export-package of servlet-api
 - Move several chkconfig actions and reqs to systemv subpackage
 - New maven depmaps generation method
-- Add patch to support java7. (patch sent upstream). 
+- Add patch to support java7. (patch sent upstream).
 - Require java >= 1:1.6.0
 
 * Fri Jan 13 2012 Krzysztof Daniel <kdaniel@redhat.com> 0:7.0.23-5
@@ -708,7 +712,7 @@ fi
 - Updated to 7.0.23
 
 * Fri Nov 11 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.22-2
-- Move tomcat-juli.jar to lib package 
+- Move tomcat-juli.jar to lib package
 - Drop %%update_maven_depmap as in tomcat6
 - Provide native systemd unit file ported from tomcat6
 
@@ -744,7 +748,7 @@ fi
 
 * Mon Jun 6 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.14-3
 - Added initial systemd service
-- Fix some paths 
+- Fix some paths
 
 * Sat May 21 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.14-2
 - Fixed http source link
@@ -768,9 +772,9 @@ fi
 
 * Thu Apr 28 2011 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.12-2
 - Package now named just tomcat instead of tomcat7
-- Removed Provides:  %{name}-log4j 
+- Removed Provides:  %{name}-log4j
 - Switched to apache-commons-* names instead of jakarta-commons-* .
-- Remove the old changelog 
+- Remove the old changelog
 - BR/R java >= 1:1.6.0 , same for java-devel
 - Removed old tomcat6 crap
 
