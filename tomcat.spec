@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 26
+%global micro_version 27
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       1%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -85,8 +85,6 @@ Source20:      %{name}-%{major_version}.%{minor_version}-jsvc.service
 
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
-#https://issues.apache.org/bugzilla/show_bug.cgi?id=52493
-Patch2:        add_parent_logger_getter.patch
 
 BuildArch:     noarch
 
@@ -98,7 +96,7 @@ BuildRequires: apache-commons-collections
 BuildRequires: apache-commons-daemon
 BuildRequires: apache-commons-dbcp
 BuildRequires: apache-commons-pool
-BuildRequires: jakarta-taglibs-standard >= 0:1.1.2-4
+BuildRequires: jakarta-taglibs-standard
 BuildRequires: java-devel >= 1:1.6.0
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
@@ -227,7 +225,7 @@ Expression Language 1.0.
 Group: Applications/Internet
 Summary: The ROOT and examples web applications for Apache Tomcat
 Requires: %{name} = %{epoch}:%{version}-%{release}
-Requires: jakarta-taglibs-standard >= 0:1.1.2-4
+Requires: jakarta-taglibs-standard >= 0:1.1
 
 %description webapps
 The ROOT and examples web applications for Apache Tomcat.
@@ -240,7 +238,6 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 
 %patch0 -p0
 %patch1 -p0
-%patch2 -p0
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
 
@@ -662,6 +659,10 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Wed Apr 7 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.27-1
+- Updated to 7.0.27
+- Fixed jakarta-taglibs-standard BR and R
+
 * Wed Mar 21 2012 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:7.0.26-2
 - Add more depmaps to J2EE apis to help jetty/glassfish updates
 
