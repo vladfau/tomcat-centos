@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -259,9 +259,7 @@ export OPT_JAR_LIST="xalan-j2-serializer"
       -Djdt.jar="$(build-classpath ecj)" \
       -Dtomcat-dbcp.jar="$(build-classpath apache-commons-dbcp)" \
       -Dtomcat-native.tar.gz="HACK" \
-      -Dtomcat-native.dll.win32="HACK" \
-      -Dtomcat-native.dll.x64="HACK" \
-      -Dtomcat-native.dll.i64="HACK" \
+      -Dtomcat-native.win="HACK" \
       -Dcommons-daemon.native.win.mgr.exe="HACK" \
       -Dnsis.exe="HACK" \
       -Djaxrpc-lib.jar="$(build-classpath jaxrpc)" \
@@ -659,7 +657,10 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
-* Wed Apr 7 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.27-1
+* Mon Apr 9 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.27-2
+- Fixed native download hack
+
+* Sat Apr 7 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.27-1
 - Updated to 7.0.27
 - Fixed jakarta-taglibs-standard BR and R
 
