@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 27
+%global micro_version 28
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       1%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -115,8 +115,6 @@ Requires:      %{name}-lib = %{epoch}:%{version}-%{release}
 Requires(pre):    shadow-utils
 Requires(post):   chkconfig
 Requires(preun):  chkconfig
-Requires(post):   redhat-lsb
-Requires(preun):  redhat-lsb
 Requires(post):   systemd-units
 Requires(preun):  systemd-units
 Requires(postun): systemd-units
@@ -273,7 +271,9 @@ export OPT_JAR_LIST="xalan-j2-serializer"
 
     # remove some jars that we'll replace with symlinks later
    %{__rm} output/build/bin/commons-daemon.jar \
-           output/build/lib/ecj.jar
+           output/build/lib/ecj.jar \
+           output/build/lib/apache-commons-dbcp.jar
+
     # remove the cruft we created
    %{__rm} output/build/bin/tomcat-native.tar.gz
 pushd output/dist/src/webapps/docs/appdev/sample/src
@@ -457,6 +457,9 @@ done
 %{__cp} -a tomcat-tribes.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-catalina-tribes.pom
 %add_maven_depmap JPP.%{name}-catalina-tribes.pom %{name}/catalina-tribes.jar
 
+%{__cp} -a tomcat-coyote.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-coyote.pom
+%add_maven_depmap JPP.%{name}-tomcat-coyote.pom %{name}/tomcat-coyote.jar
+
 %{__cp} -a tomcat-juli.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-juli.pom
 %add_maven_depmap JPP.%{name}-tomcat-juli.pom %{name}/tomcat-juli.jar
 
@@ -478,7 +481,6 @@ done
 
 %post
 # install but don't activate
-/sbin/chkconfig --add %{name}
 if [ $1 -eq 1 ]; then
     #initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
@@ -617,6 +619,7 @@ fi
 %{_mavenpomdir}/JPP.%{name}-jasper.pom
 %{_mavenpomdir}/JPP.%{name}-tomcat-api.pom
 %{_mavenpomdir}/JPP.%{name}-tomcat-juli.pom
+%{_mavenpomdir}/JPP.%{name}-tomcat-coyote.pom
 %{_mavenpomdir}/JPP.%{name}-tomcat-util.pom
 
 %exclude %{libdir}/%{name}-el-%{elspec}-api.jar
@@ -657,6 +660,13 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Mon Jul 2 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.28-1
+- Updated to 7.0.28
+- Resolves: rhbz 820119 Remove bundled apache-commons-dbcp
+- Resolves: rhbz 814900 Added tomcat-coyote POM
+- Resolves: rhbz 810775 Remove systemv stuff from %post scriptlet
+- Remove redhat-lsb R 
+
 * Mon Apr 9 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.27-2
 - Fixed native download hack
 
