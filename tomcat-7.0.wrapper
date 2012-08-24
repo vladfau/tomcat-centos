@@ -8,16 +8,20 @@ else
 fi
 
 # Get the tomcat config (use this for environment specific settings)
-#if [ -z "${TOMCAT_CFG}" ]; then
-#  TOMCAT_CFG="/etc/tomcat/tomcat.conf"
-#fi
+if [ -z "${TOMCAT_CFG}" ]; then
+  TOMCAT_CFG="/etc/tomcat/tomcat.conf"
+fi
 
-#if [ -r "$TOMCAT_CFG" ]; then
-#  . $TOMCAT_CFG
-#fi
+if [ -r "$TOMCAT_CFG" ]; then
+  . $TOMCAT_CFG
+fi
+
+# Get instance specific config file
+if [ -r "/etc/sysconfig/${NAME}" ]; then
+    . /etc/sysconfig/${NAME}
+fi
 
 set_javacmd
-
 # CLASSPATH munging
 if [ -n "$JSSE_HOME" ]; then
   CLASSPATH="${CLASSPATH}:$(build-classpath jcert jnet jsse 2>/dev/null)"

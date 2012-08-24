@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 28
+%global micro_version 29
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       1%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -324,6 +324,8 @@ zip -u output/build/bin/tomcat-juli.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{libdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{logdir}
 /bin/touch ${RPM_BUILD_ROOT}%{logdir}/catalina.out
+%{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{_localstatedir}/run
+/bin/touch ${RPM_BUILD_ROOT}%{_localstatedir}/run/%{name}.pid
 /bin/echo "%{name}-%{major_version}.%{minor_version}.%{micro_version} RPM installed" >> ${RPM_BUILD_ROOT}%{logdir}/catalina.out
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{homedir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{tempdir}
@@ -472,6 +474,11 @@ done
 # replace temporary copy with link
 %{__ln_s} -f %{bindir}/tomcat-juli.jar ${RPM_BUILD_ROOT}%{libdir}/
 
+mkdir -p ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d
+cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/%{name}.conf <<EOF
+f %{_localstatedir}/run/%{name}.pid 0644 tomcat tomcat -
+EOF
+
 
 %pre
 # add the tomcat user and group
@@ -481,10 +488,7 @@ done
 
 %post
 # install but don't activate
-if [ $1 -eq 1 ]; then
-    #initial installation
-    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
-fi
+%systemd_post %{name}.service
 
 %post systemv
 # install but don't activate
@@ -509,19 +513,10 @@ fi
 %preun
 # clean tempdir and workdir on removal or upgrade
 %{__rm} -rf %{workdir}/* %{tempdir}/*
-if [ "$1" = "0" ]; then
-    # package removal, not upgrade
-    /bin/systemctl --no-reload disable tomcat.service > /dev/null 2>&1 || :
-    /bin/systemctl stop tomcat.service > /dev/null 2>&1 || :
-fi
+%systemd_preun %{name}.service
 
 %postun
-/bin/systemctl daemon-reload > /dev/null 2>&1 || :
-if [ $1 -ge 1 ]; then
-    #package upgrade, not uninstall
-    /bin/systemctl try-restart tomcat.service > /dev/null 2>&1 || :
-fi
-
+%systemd_postun_with_restart %{name}.service 
 
 %postun jsp-%{jspspec}-api
 if [ "$1" = "0" ]; then
@@ -562,6 +557,7 @@ fi
 %defattr(0664,root,tomcat,0770)
 %attr(0770,root,tomcat) %dir %{logdir}
 %attr(0660,tomcat,tomcat) %{logdir}/catalina.out
+%attr(0644,tomcat,tomcat) %{_localstatedir}/run/%{name}.pid
 %attr(0770,root,tomcat) %dir %{cachedir}
 %attr(0770,root,tomcat) %dir %{tempdir}
 %attr(0770,root,tomcat) %dir %{workdir}
@@ -577,6 +573,7 @@ fi
 %attr(0660,tomcat,tomcat) %config(noreplace) %{confdir}/tomcat-users.xml
 %attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/web.xml
 %dir %{homedir}
+%{_prefix}/lib/tmpfiles.d/%{name}.conf
 %{bindir}/bootstrap.jar
 %{bindir}/catalina-tasks.xml
 %{homedir}/lib
@@ -660,6 +657,13 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Fri Aug 24 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.29-1
+- Updated to 7.0.29
+- Add pidfile as tmpfile
+- Use systemd for running as unprivileged user
+- Resolves: rhbz 847751 upgrade path was broken
+- Resolves: rhbz 850343 use new systemd-rpm macros
+
 * Sat Jul 21 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:7.0.28-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
 

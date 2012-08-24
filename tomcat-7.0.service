@@ -14,6 +14,9 @@ After=syslog.target network.target
 Type=forking
 ExecStart=/usr/sbin/tomcat-sysd start
 ExecStop=/usr/sbin/tomcat-sysd stop
+User=tomcat
+Group=tomcat
+
 
 [Install]
 WantedBy=multi-user.target
