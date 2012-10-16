@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 29
+%global micro_version 32
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -427,6 +427,18 @@ pushd ${RPM_BUILD_ROOT}%{appdir}/sample
 popd
 %{__rm} ${RPM_BUILD_ROOT}%{appdir}/docs/appdev/sample/sample.war
 
+# Allow linking for example webapp
+%{__mkdir_p} ${RPM_BUILD_ROOT}%{appdir}/examples/META-INF
+pushd ${RPM_BUILD_ROOT}%{appdir}/examples/META-INF
+echo '<?xml version="1.0" encoding="UTF-8"?>'>context.xml
+echo '<Context allowLinking="true"/>'>>context.xml
+popd
+
+pushd ${RPM_BUILD_ROOT}%{appdir}/examples/WEB-INF/lib
+%{__ln_s} -f $(build-classpath jakarta-taglibs-core) jstl.jar
+%{__ln_s} -f $(build-classpath jakarta-taglibs-standard) standard.jar
+popd
+
 
 # Install the maven metadata
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_mavenpomdir}
@@ -657,6 +669,10 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Wed Oct 17 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.32-1
+- Updated to 7.0.32
+- Resolves: rhbz 842620 symlinks to taglibs
+
 * Fri Aug 24 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.29-1
 - Updated to 7.0.29
 - Add pidfile as tmpfile
