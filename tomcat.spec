@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 32
+%global micro_version 33
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -180,6 +180,8 @@ Summary: Apache Tomcat JSP API implementation classes
 Provides: jsp = %{jspspec}
 Provides: jsp22
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
+Requires(post): chkconfig
+Requires(postun): chkconfig
 
 %description jsp-%{jspspec}-api
 Apache Tomcat JSP API implementation classes.
@@ -206,6 +208,8 @@ Summary: Apache Tomcat Servlet API implementation classes
 Provides: servlet = %{servletspec}
 Provides: servlet6
 Provides: servlet3
+Requires(post): chkconfig
+Requires(postun): chkconfig
 
 %description servlet-%{servletspec}-api
 Apache Tomcat Servlet API implementation classes.
@@ -215,6 +219,8 @@ Group: Development/Libraries
 Summary: Expression Language v1.0 API
 Provides: el_1_0_api = %{epoch}:%{version}-%{release}
 Provides: el_api = %{elspec}
+Requires(post): chkconfig
+Requires(postun): chkconfig
 
 %description el-%{elspec}-api
 Expression Language 1.0.
@@ -669,6 +675,10 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Sun Dec 2 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.33-1
+- Updated to 7.0.33
+- Resolves: rhbz 873620 need chkconfig for update-alternatives
+
 * Wed Oct 17 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.32-1
 - Updated to 7.0.32
 - Resolves: rhbz 842620 symlinks to taglibs
