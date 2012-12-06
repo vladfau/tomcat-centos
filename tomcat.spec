@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -572,8 +572,9 @@ fi
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %attr(0755,root,tomcat) %dir %{basedir}
 %attr(0755,root,tomcat) %dir %{confdir}
+%defattr(0664,tomcat,root,0770)
+%attr(0770,tomcat,root) %dir %{logdir}
 %defattr(0664,root,tomcat,0770)
-%attr(0770,root,tomcat) %dir %{logdir}
 %attr(0660,tomcat,tomcat) %{logdir}/catalina.out
 %attr(0644,tomcat,tomcat) %{_localstatedir}/run/%{name}.pid
 %attr(0770,root,tomcat) %dir %{cachedir}
@@ -675,6 +676,9 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Fri Dec 7 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.33-2
+- Resolves: rhbz 883806 refix logdir ownership 
+
 * Sun Dec 2 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.33-1
 - Updated to 7.0.33
 - Resolves: rhbz 873620 need chkconfig for update-alternatives
