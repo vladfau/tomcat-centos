@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 33
+%global micro_version 34
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       1%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -90,7 +90,7 @@ BuildArch:     noarch
 
 BuildRequires: ant
 BuildRequires: ant-nodeps
-BuildRequires: ecj
+BuildRequires: ecj >= 4.2.1
 BuildRequires: findutils
 BuildRequires: apache-commons-collections
 BuildRequires: apache-commons-daemon
@@ -193,7 +193,7 @@ Summary: Libraries needed to run the Tomcat Web container
 Requires: %{name}-jsp-%{jspspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-el-%{elspec}-api = %{epoch}:%{version}-%{release}
-Requires: ecj
+Requires: ecj >= 4.2.1
 Requires: apache-commons-collections
 Requires: apache-commons-dbcp
 Requires: apache-commons-pool
@@ -676,6 +676,11 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Mon Dec 24 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.34-1
+- Updated to 7.0.34
+- ecj >= 4.2.1 now required
+- Resolves: rhbz 889395 concat classpath correctly; chdir to $CATALINA_HOME
+
 * Fri Dec 7 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.33-2
 - Resolves: rhbz 883806 refix logdir ownership 
 
