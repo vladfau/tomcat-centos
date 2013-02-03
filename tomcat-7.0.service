@@ -14,6 +14,7 @@ After=syslog.target network.target
 Type=forking
 ExecStart=/usr/sbin/tomcat-sysd start
 ExecStop=/usr/sbin/tomcat-sysd stop
+SuccessExitStatus=143
 User=tomcat
 Group=tomcat
 
