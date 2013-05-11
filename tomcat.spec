@@ -681,12 +681,12 @@ fi
 - Updated to 7.0.40
 - Resolves: rhbz 956569 added missing commons-pool link
 
-* Wed Feb 20 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.39-1
-- Updated to 7.0.39
-
 * Mon Mar  4 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:7.0.37-2
 - Add depmaps for org.eclipse.jetty.orbit
 - Resolves: rhbz#917626
+
+* Wed Feb 20 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.39-1
+- Updated to 7.0.39
 
 * Wed Feb 20 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.37-1
 - Updated to 7.0.37
