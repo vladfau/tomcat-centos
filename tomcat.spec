@@ -89,7 +89,6 @@ Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.pat
 BuildArch:     noarch
 
 BuildRequires: ant
-BuildRequires: ant-nodeps
 BuildRequires: ecj >= 1:4.2.1
 BuildRequires: findutils
 BuildRequires: apache-commons-collections
@@ -680,6 +679,7 @@ fi
 * Sat May 11 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.40-1
 - Updated to 7.0.40
 - Resolves: rhbz 956569 added missing commons-pool link
+- Remove ant-nodeps BR
 
 * Mon Mar  4 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:7.0.37-2
 - Add depmaps for org.eclipse.jetty.orbit
