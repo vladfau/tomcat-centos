@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 37
+%global micro_version 40
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -409,6 +409,7 @@ pushd ${RPM_BUILD_ROOT}%{libdir}
     %{__ln_s} ../%{name}-el-%{elspec}-api.jar .
     %{__ln_s} $(build-classpath apache-commons-collections) commons-collections.jar
     %{__ln_s} $(build-classpath apache-commons-dbcp) commons-dbcp.jar
+    %{__ln_s} $(build-classpath apache-commons-pool) commons-pool.jar
     %{__ln_s} $(build-classpath log4j) log4j.jar
     %{__ln_s} $(build-classpath ecj) jasper-jdt.jar
 
@@ -676,6 +677,13 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Sat May 11 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.40-1
+- Updated to 7.0.40
+- Resolves: rhbz 956569 added missing commons-pool link
+
+* Wed Feb 20 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.39-1
+- Updated to 7.0.39
+
 * Mon Mar  4 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:7.0.37-2
 - Add depmaps for org.eclipse.jetty.orbit
 - Resolves: rhbz#917626
