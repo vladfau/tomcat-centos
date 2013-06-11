@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       3%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -62,7 +62,6 @@ License:       ASL 2.0
 URL:           http://tomcat.apache.org/
 Source0:       http://www.apache.org/dist/tomcat/tomcat-%{major_version}/v%{version}/src/%{packdname}.tar.gz
 Source1:       %{name}-%{major_version}.%{minor_version}.conf
-Source2:       %{name}-%{major_version}.%{minor_version}.init
 Source3:       %{name}-%{major_version}.%{minor_version}.sysconfig
 Source4:       %{name}-%{major_version}.%{minor_version}.wrapper
 Source5:       %{name}-%{major_version}.%{minor_version}.logrotate
@@ -77,11 +76,12 @@ Source13:      jasper-el-OSGi-MANIFEST.MF
 Source14:      jasper-OSGi-MANIFEST.MF
 Source15:      tomcat-api-OSGi-MANIFEST.MF
 Source16:      tomcat-juli-OSGi-MANIFEST.MF
-Source17:      %{name}-%{major_version}.%{minor_version}-tomcat-sysd
 Source18:      %{name}-%{major_version}.%{minor_version}-tomcat-jsvc-sysd
 Source19:      %{name}-%{major_version}.%{minor_version}-jsvc.wrapper
 Source20:      %{name}-%{major_version}.%{minor_version}-jsvc.service
-
+Source30:      tomcat-preamble
+Source31:      tomcat-server
+Source32:      tomcat-named.service
 
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
@@ -151,16 +151,6 @@ Requires: jpackage-utils
 
 %description javadoc
 Javadoc generated documentation for Apache Tomcat.
-
-%package systemv
-Group: System Environment/Daemons
-Summary: Systemv scripts for Apache Tomcat
-Requires: %{name} = %{epoch}:%{version}-%{release}
-Requires(post): chkconfig
-Requires(postun): chkconfig
-
-%description systemv
-SystemV scripts to start and stop tomcat service
 
 %package jsvc
 Group: System Environment/Daemons
@@ -336,6 +326,7 @@ zip -u output/build/bin/tomcat-juli.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{tempdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{workdir}
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_unitdir}
+%{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_libexecdir}/%{name}
 
 # move things into place
 # First copy supporting libs to tomcat lib
@@ -357,21 +348,16 @@ popd
    -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
    -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE3} \
     > ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/%{name}
-%{__install} -m 0644 %{SOURCE2} \
-    ${RPM_BUILD_ROOT}%{_initrddir}/%{name}
 %{__install} -m 0644 %{SOURCE4} \
     ${RPM_BUILD_ROOT}%{_sbindir}/%{name}
 %{__install} -m 0644 %{SOURCE11} \
     ${RPM_BUILD_ROOT}%{_unitdir}/%{name}.service
-%{__install} -m 0644 %{SOURCE17} \
-    ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-sysd
 %{__install} -m 0644 %{SOURCE19} \
     ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-jsvc
 %{__install} -m 0644 %{SOURCE20} \
     ${RPM_BUILD_ROOT}%{_unitdir}/%{name}-jsvc.service
 %{__install} -m 0644 %{SOURCE18} \
     ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-jsvc-sysd
-%{__ln_s} %{name} ${RPM_BUILD_ROOT}%{_sbindir}/d%{name}
 %{__sed} -e "s|\@\@\@TCLOG\@\@\@|%{logdir}|g" %{SOURCE5} \
     > ${RPM_BUILD_ROOT}%{_sysconfdir}/logrotate.d/%{name}
 %{__sed} -e "s|\@\@\@TCHOME\@\@\@|%{homedir}|g" \
@@ -382,6 +368,14 @@ popd
    -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
    -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE7} \
     > ${RPM_BUILD_ROOT}%{_bindir}/%{name}-tool-wrapper
+
+%{__install} -m 0755 %{SOURCE30} \
+    ${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/preamble
+%{__install} -m 0755 %{SOURCE31} \
+    ${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/server
+%{__install} -m 0644 %{SOURCE32} \
+    ${RPM_BUILD_ROOT}%{_unitdir}/%{name}@.service
+
 # create jsp and servlet API symlinks
 pushd ${RPM_BUILD_ROOT}%{_javadir}
    %{__mv} %{name}/jsp-api.jar %{name}-jsp-%{jspspec}-api.jar
@@ -508,10 +502,6 @@ EOF
 # install but don't activate
 %systemd_post %{name}.service
 
-%post systemv
-# install but don't activate
-/sbin/chkconfig --add %{name}
-
 %post jsp-%{jspspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/jsp.jar jsp \
     %{_javadir}/%{name}-jsp-%{jspspec}-api.jar 20200
@@ -523,10 +513,6 @@ EOF
 %post el-%{elspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/elspec.jar elspec \
    %{_javadir}/%{name}-el-%{elspec}-api.jar 20300
-
-%preun systemv
-    %{_initrddir}/%{name} stop >/dev/null 2>&1
-    /sbin/chkconfig --del %{name}
 
 %preun
 # clean tempdir and workdir on removal or upgrade
@@ -567,7 +553,10 @@ fi
 %attr(0755,root,root) %{_bindir}/%{name}-tool-wrapper
 %attr(0755,root,root) %{_sbindir}/%{name}
 %attr(0644,root,root) %{_unitdir}/%{name}.service
-%attr(0755,root,root) %{_sbindir}/%{name}-sysd
+%attr(0644,root,root) %{_unitdir}/%{name}@.service
+%attr(0755,root,root) %dir %{_libexecdir}/%{name}
+%attr(0755,root,root) %{_libexecdir}/%{name}/preamble
+%attr(0755,root,root) %{_libexecdir}/%{name}/server
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %attr(0755,root,tomcat) %dir %{basedir}
@@ -664,11 +653,6 @@ fi
 %{appdir}/examples
 %{appdir}/sample
 
-%files systemv
-%defattr(755,root,root,0755)
-%{_sbindir}/d%{name}
-%{_initrddir}/%{name}
-
 %files jsvc
 %defattr(755,root,root,0755)
 %{_sbindir}/%{name}-jsvc
@@ -676,6 +660,13 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Tue Jun 11 2013 Paul Komkoff <i@stingr.net> 0:7.0.40-3
+- Dropped systemv inits. Bye-bye.
+- Updated the systemd wrappers to allow running multiple instances.
+  Added wrapper scripts to do that, ported the original non-named
+  service file to work with the same wrappers, updated
+  /usr/sbin/tomcat to call systemctl.
+
 * Sat May 11 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.40-1
 - Updated to 7.0.40
 - Resolves: rhbz 956569 added missing commons-pool link
