@@ -16,7 +16,7 @@ if [ "$1" = "start" ] ; then
   if [ "${SECURITY_MANAGER}" = "true" ] ; then
     OPTIONS="${OPTIONS} \
     -Djava.security.manager \
-    -Djava.security.policy==\"${CATALINA_BASE}/conf/catalina.policy\""
+    -Djava.security.policy==${CATALINA_BASE}/conf/catalina.policy"
   fi
   run start
 elif [ "$1" = "stop" ] ; then
