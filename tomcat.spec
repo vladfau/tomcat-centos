@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       3%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -468,6 +468,9 @@ done
 # also provide jetty depmap (originally in jetty package, but it's cleaner to have it here
 %add_maven_depmap JPP-tomcat-servlet-api.pom tomcat-servlet-api.jar -f "tomcat-servlet-api" -a "javax.servlet:servlet-api,javax.servlet:javax.servlet-api,org.mortbay.jetty:servlet-api,org.eclipse.jetty.orbit:javax.servlet"
 
+# replace temporary copy with link
+%{__ln_s} -f $(abs2rel %{bindir}/tomcat-juli.jar %{libdir}) ${RPM_BUILD_ROOT}%{libdir}/
+
 # two special pom where jar files have different names
 %{__cp} -a tomcat-tribes.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-catalina-tribes.pom
 %add_maven_depmap JPP.%{name}-catalina-tribes.pom %{name}/catalina-tribes.jar
@@ -483,9 +486,6 @@ done
 
 %{__cp} -a tomcat-util.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-util.pom
 %add_maven_depmap JPP.%{name}-tomcat-util.pom %{name}/tomcat-util.jar
-
-# replace temporary copy with link
-%{__ln_s} -f %{bindir}/tomcat-juli.jar ${RPM_BUILD_ROOT}%{libdir}/
 
 mkdir -p ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d
 cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/%{name}.conf <<EOF
@@ -661,6 +661,10 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Tue Jan 21 2014 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:7.0.47-3
+- Fix installation of Maven metadata for tomcat-juli.jar
+- Resolves: rhbz#1033664
+
 * Wed Jan 15 2014 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:7.0.47-2
 - Rebuild for bug #1033664
 
