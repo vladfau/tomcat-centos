@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 47
+%global micro_version 33
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -49,7 +49,6 @@
 %global tempdir %{cachedir}/temp
 %global workdir %{cachedir}/work
 %global _initrddir %{_sysconfdir}/init.d
-%global _systemddir /lib/systemd/system
 
 Name:          tomcat
 Epoch:         0
@@ -60,7 +59,7 @@ Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{js
 Group:         System Environment/Daemons
 License:       ASL 2.0
 URL:           http://tomcat.apache.org/
-Source0:       http://www.apache.org/dist/tomcat/tomcat-%{major_version}/v%{version}/src/%{packdname}.tar.gz
+Source0:       http://www.archive.apache.org/dist/tomcat/tomcat-%{major_version}/v%{version}/src/%{packdname}.tar.gz
 Source1:       %{name}-%{major_version}.%{minor_version}.conf
 Source2:       %{name}-%{major_version}.%{minor_version}.init
 Source3:       %{name}-%{major_version}.%{minor_version}.sysconfig
@@ -71,17 +70,12 @@ Source7:       %{name}-%{major_version}.%{minor_version}-tool-wrapper.script
 Source8:       servlet-api-OSGi-MANIFEST.MF
 Source9:       jsp-api-OSGi-MANIFEST.MF
 Source10:      %{name}-%{major_version}.%{minor_version}-log4j.properties
-Source11:      %{name}-%{major_version}.%{minor_version}.service
 Source12:      el-api-OSGi-MANIFEST.MF
 Source13:      jasper-el-OSGi-MANIFEST.MF
 Source14:      jasper-OSGi-MANIFEST.MF
 Source15:      tomcat-api-OSGi-MANIFEST.MF
 Source16:      tomcat-juli-OSGi-MANIFEST.MF
-Source17:      %{name}-%{major_version}.%{minor_version}-tomcat-sysd
-Source18:      %{name}-%{major_version}.%{minor_version}-tomcat-jsvc-sysd
-Source19:      %{name}-%{major_version}.%{minor_version}-jsvc.wrapper
-Source20:      %{name}-%{major_version}.%{minor_version}-jsvc.service
-
+Source17:      %{name}-%{major_version}.%{minor_version}-jsvc.wrapper
 
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
@@ -90,34 +84,32 @@ BuildArch:     noarch
 
 BuildRequires: ant
 BuildRequires: ant-nodeps
-BuildRequires: ecj >= 1:4.2.1
+BuildRequires: ant-trax
+BuildRequires: ecj
 BuildRequires: findutils
-BuildRequires: apache-commons-collections
-BuildRequires: apache-commons-daemon
-BuildRequires: apache-commons-dbcp
-BuildRequires: apache-commons-pool
+BuildRequires: jakarta-commons-collections
+BuildRequires: jakarta-commons-daemon
+BuildRequires: jakarta-commons-dbcp
+BuildRequires: jakarta-commons-pool
 BuildRequires: jakarta-taglibs-standard
 BuildRequires: java-devel >= 1:1.6.0
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
 BuildRequires: log4j
-BuildRequires: geronimo-jaxrpc
 BuildRequires: wsdl4j
-BuildRequires: systemd-units
-Requires:      apache-commons-daemon
-Requires:      apache-commons-logging
-Requires:      apache-commons-collections
-Requires:      apache-commons-dbcp
-Requires:      apache-commons-pool
+Requires:      jakarta-commons-daemon
+Requires:      jakarta-commons-logging
+Requires:      jakarta-commons-collections
+Requires:      jakarta-commons-dbcp
+Requires:      jakarta-commons-pool
 Requires:      java >= 1:1.6.0
 Requires:      procps
 Requires:      %{name}-lib = %{epoch}:%{version}-%{release}
 Requires(pre):    shadow-utils
 Requires(post):   chkconfig
 Requires(preun):  chkconfig
-Requires(post):   systemd-units
-Requires(preun):  systemd-units
-Requires(postun): systemd-units
+Requires(post): redhat-lsb
+Requires(preun): redhat-lsb
 
 %description
 Tomcat is the servlet container that is used in the official Reference
@@ -153,21 +145,11 @@ Requires: jpackage-utils
 %description javadoc
 Javadoc generated documentation for Apache Tomcat.
 
-%package systemv
-Group: System Environment/Daemons
-Summary: Systemv scripts for Apache Tomcat
-Requires: %{name} = %{epoch}:%{version}-%{release}
-Requires(post): chkconfig
-Requires(postun): chkconfig
-
-%description systemv
-SystemV scripts to start and stop tomcat service
-
 %package jsvc
 Group: System Environment/Daemons
 Summary: Apache jsvc wrapper for Apache Tomcat as separate service
 Requires: %{name} = %{epoch}:%{version}-%{release}
-Requires: apache-commons-daemon-jsvc
+Requires: jakarta-commons-daemon-jsvc
 
 %description jsvc
 Systemd service and wrapper scripts to start tomcat with jsvc,
@@ -193,10 +175,10 @@ Summary: Libraries needed to run the Tomcat Web container
 Requires: %{name}-jsp-%{jspspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-el-%{elspec}-api = %{epoch}:%{version}-%{release}
-Requires: ecj >= 1:4.2.1
-Requires: apache-commons-collections
-Requires: apache-commons-dbcp
-Requires: apache-commons-pool
+Requires: ecj
+Requires: jakarta-commons-collections
+Requires: jakarta-commons-dbcp
+Requires: jakarta-commons-pool
 Requires(preun): coreutils
 
 %description lib
@@ -246,9 +228,9 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
 
 %build
-export OPT_JAR_LIST="xalan-j2-serializer"
+export OPT_JAR_LIST="ant/ant-trax xalan-j2-serializer"
    # we don't care about the tarballs and we're going to replace
-   # tomcat-dbcp.jar with apache-commons-{collections,dbcp,pool}-tomcat5.jar
+   # tomcat-dbcp.jar with jakarta-commons-{collections,dbcp,pool}-tomcat5.jar
    # so just create a dummy file for later removal
    touch HACK
    %{__mkdir_p} HACKDIR
@@ -256,17 +238,17 @@ export OPT_JAR_LIST="xalan-j2-serializer"
    # who needs a build.properties file anyway
    %{ant} -Dbase.path="." \
       -Dbuild.compiler="modern" \
-      -Dcommons-collections.jar="$(build-classpath apache-commons-collections)" \
-      -Dcommons-daemon.jar="$(build-classpath apache-commons-daemon)" \
+      -Dcommons-collections.jar="$(build-classpath jakarta-commons-collections)" \
+      -Dcommons-daemon.jar="$(build-classpath jakarta-commons-daemon)" \
       -Dcommons-daemon.native.src.tgz="HACK" \
       -Djasper-jdt.jar="$(build-classpath ecj)" \
       -Djdt.jar="$(build-classpath ecj)" \
-      -Dtomcat-dbcp.jar="$(build-classpath apache-commons-dbcp)" \
+      -Dtomcat-dbcp.jar="$(build-classpath jakarta-commons-dbcp)" \
       -Dtomcat-native.tar.gz="HACK" \
       -Dtomcat-native.home="." \
       -Dcommons-daemon.native.win.mgr.exe="HACK" \
       -Dnsis.exe="HACK" \
-      -Djaxrpc-lib.jar="$(build-classpath jaxrpc)" \
+      -Djaxrpc-lib.jar="HACK" \
       -Dwsdl4j-lib.jar="$(build-classpath wsdl4j)" \
       -Dcommons-pool.home="HACKDIR" \
       -Dcommons-dbcp.home="HACKDIR" \
@@ -278,7 +260,7 @@ export OPT_JAR_LIST="xalan-j2-serializer"
     # remove some jars that we'll replace with symlinks later
    %{__rm} output/build/bin/commons-daemon.jar \
            output/build/lib/ecj.jar \
-           output/build/lib/apache-commons-dbcp.jar
+           output/build/lib/jakarta-commons-dbcp.jar
 
     # remove the cruft we created
    %{__rm} output/build/bin/tomcat-native.tar.gz
@@ -320,7 +302,6 @@ zip -u output/build/bin/tomcat-juli.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_sbindir}
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_javadocdir}/%{name}
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_initrddir}
-%{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_systemddir}
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_sysconfdir}/logrotate.d
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{appdir}
@@ -336,7 +317,6 @@ zip -u output/build/bin/tomcat-juli.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{homedir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{tempdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{workdir}
-%{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_unitdir}
 
 # move things into place
 # First copy supporting libs to tomcat lib
@@ -348,7 +328,7 @@ pushd output/build
     %{__cp} -a webapps/* ${RPM_BUILD_ROOT}%{appdir}
 popd
 # javadoc
-%{__cp} -a output/dist/webapps/docs/api/* ${RPM_BUILD_ROOT}%{_javadocdir}/%{name}
+%{__cp} -a webapps/docs/api/* ${RPM_BUILD_ROOT}%{_javadocdir}/%{name}
 
 %{__sed} -e "s|\@\@\@TCHOME\@\@\@|%{homedir}|g" \
    -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
@@ -362,16 +342,8 @@ popd
     ${RPM_BUILD_ROOT}%{_initrddir}/%{name}
 %{__install} -m 0644 %{SOURCE4} \
     ${RPM_BUILD_ROOT}%{_sbindir}/%{name}
-%{__install} -m 0644 %{SOURCE11} \
-    ${RPM_BUILD_ROOT}%{_unitdir}/%{name}.service
 %{__install} -m 0644 %{SOURCE17} \
-    ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-sysd
-%{__install} -m 0644 %{SOURCE19} \
     ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-jsvc
-%{__install} -m 0644 %{SOURCE20} \
-    ${RPM_BUILD_ROOT}%{_unitdir}/%{name}-jsvc.service
-%{__install} -m 0644 %{SOURCE18} \
-    ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-jsvc-sysd
 %{__ln_s} %{name} ${RPM_BUILD_ROOT}%{_sbindir}/d%{name}
 %{__sed} -e "s|\@\@\@TCLOG\@\@\@|%{logdir}|g" %{SOURCE5} \
     > ${RPM_BUILD_ROOT}%{_sysconfdir}/logrotate.d/%{name}
@@ -394,8 +366,8 @@ pushd ${RPM_BUILD_ROOT}%{_javadir}
 popd
 
 pushd output/build
-    %{_bindir}/build-jar-repository lib apache-commons-collections \
-                                        apache-commons-dbcp apache-commons-pool ecj 2>&1
+    %{_bindir}/build-jar-repository lib jakarta-commons-collections \
+                                        jakarta-commons-dbcp jakarta-commons-pool ecj 2>&1
     # need to use -p here with b-j-r otherwise the examples webapp fails to
     # load with a java.io.IOException
     %{_bindir}/build-jar-repository -p webapps/examples/WEB-INF/lib \
@@ -407,9 +379,8 @@ pushd ${RPM_BUILD_ROOT}%{libdir}
     %{__ln_s} ../%{name}-jsp-%{jspspec}-api.jar .
     %{__ln_s} ../%{name}-servlet-%{servletspec}-api.jar .
     %{__ln_s} ../%{name}-el-%{elspec}-api.jar .
-    %{__ln_s} $(build-classpath apache-commons-collections) commons-collections.jar
-    %{__ln_s} $(build-classpath apache-commons-dbcp) commons-dbcp.jar
-    %{__ln_s} $(build-classpath apache-commons-pool) commons-pool.jar
+    %{__ln_s} $(build-classpath jakarta-commons-collections) commons-collections.jar
+    %{__ln_s} $(build-classpath jakarta-commons-dbcp) commons-dbcp.jar
     %{__ln_s} $(build-classpath log4j) log4j.jar
     %{__ln_s} $(build-classpath ecj) jasper-jdt.jar
 
@@ -446,49 +417,44 @@ pushd ${RPM_BUILD_ROOT}%{appdir}/examples/WEB-INF/lib
 %{__ln_s} -f $(build-classpath jakarta-taglibs-standard) standard.jar
 popd
 
+%add_to_maven_depmap javax.servlet servlet-api %{servletspec} JPP %{name}-servlet-%{servletspec}-api
+%add_to_maven_depmap org.mortbay.jetty servlet-api %{servletspec} JPP %{name}-servlet-%{servletspec}-api
+mv %{buildroot}%{_mavendepmapfragdir}/%{name} %{buildroot}%{_mavendepmapfragdir}/%{name}-servlet-api 
+
 
 # Install the maven metadata
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_mavenpomdir}
 pushd output/dist/src/res/maven
-for pom in *.pom; do
-    # fix-up version in all pom files
-    sed -i 's/@MAVEN.DEPLOY.VERSION@/%{version}/g' $pom
-done
 
-# we won't install dbcp, juli-adapters and juli-extras pom files
-for libname in annotations-api catalina jasper-el jasper catalina-ha; do
-    %{__cp} -a %{name}-$libname.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-$libname.pom
-    %add_maven_depmap JPP.%{name}-$libname.pom %{name}/$libname.jar
+#we won't install dhcp, juli-adapters and juli-extras pom files
+for pom in tomcat-annotations-api.pom tomcat-catalina.pom tomcat-jasper-el.pom tomcat-jasper.pom \
+         tomcat-catalina-ha.pom tomcat-api.pom; do
+     %{__cp} -a $pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.$pom
+     base=`basename $pom .pom`
+     %add_to_maven_depmap org.apache.tomcat $base %{version} JPP $base
 done
 
 # servlet-api jsp-api and el-api are not in tomcat subdir, since they are widely re-used elsewhere
-%{__cp} -a tomcat-jsp-api.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-tomcat-jsp-api.pom
-%add_maven_depmap JPP-tomcat-jsp-api.pom tomcat-jsp-api.jar -f "tomcat-jsp-api" -a "javax.servlet.jsp:javax.servlet.jsp-api,javax.servlet:jsp-api,org.eclipse.jetty.orbit:javax.servlet.jsp"
+for pom in tomcat-jsp-api.pom tomcat-servlet-api.pom tomcat-el-api.pom; do
+    %{__cp} -a $pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-$pom
+    base=`basename $pom .pom`
+    %add_to_maven_depmap org.apache.tomcat $base JPP %{name}-$base
+    %{__cp} -a $pom ${RPM_BUILD_ROOT}%{_mavendepmapfragdir}/$base
+done
 
-%{__cp} -a tomcat-el-api.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-tomcat-el-api.pom
-%add_maven_depmap JPP-tomcat-el-api.pom tomcat-el-api.jar -f "tomcat-el-api" -a "javax.el:javax.el-api,javax.el:el-api,org.eclipse.jetty.orbit:javax.el"
-
-%{__cp} -a tomcat-servlet-api.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP-tomcat-servlet-api.pom
-# Generate a depmap fragment javax.servlet:servlet-api pointing to
-# tomcat-servlet-3.0-api for backwards compatibility
-# also provide jetty depmap (originally in jetty package, but it's cleaner to have it here
-%add_maven_depmap JPP-tomcat-servlet-api.pom tomcat-servlet-api.jar -f "tomcat-servlet-api" -a "javax.servlet:servlet-api,javax.servlet:javax.servlet-api,org.mortbay.jetty:servlet-api,org.eclipse.jetty.orbit:javax.servlet"
 
 # two special pom where jar files have different names
 %{__cp} -a tomcat-tribes.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-catalina-tribes.pom
-%add_maven_depmap JPP.%{name}-catalina-tribes.pom %{name}/catalina-tribes.jar
+%add_to_maven_depmap org.apache.tomcat tribes %{version} JPP/%{name} catalina-tribes
 
 %{__cp} -a tomcat-coyote.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-coyote.pom
-%add_maven_depmap JPP.%{name}-tomcat-coyote.pom %{name}/tomcat-coyote.jar
+%add_to_maven_depmap org.apache.tomcat coyote %{version} JPP/%{name} tomcat-coyote
 
 %{__cp} -a tomcat-juli.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-juli.pom
-%add_maven_depmap JPP.%{name}-tomcat-juli.pom %{name}/tomcat-juli.jar
-
-%{__cp} -a tomcat-api.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-api.pom
-%add_maven_depmap JPP.%{name}-tomcat-api.pom %{name}/tomcat-api.jar
+%add_to_maven_depmap org.apache.tomcat juli %{version} JPP/%{name} tomcat-juli
 
 %{__cp} -a tomcat-util.pom ${RPM_BUILD_ROOT}%{_mavenpomdir}/JPP.%{name}-tomcat-util.pom
-%add_maven_depmap JPP.%{name}-tomcat-util.pom %{name}/tomcat-util.jar
+%add_to_maven_depmap org.apache.tomcat util %{version} JPP/%{name} tomcat-util
 
 # replace temporary copy with link
 %{__ln_s} -f %{bindir}/tomcat-juli.jar ${RPM_BUILD_ROOT}%{libdir}/
@@ -505,12 +471,7 @@ EOF
 %{_sbindir}/useradd -c "Apache Tomcat" -u %{tcuid} -g tomcat \
     -s /bin/nologin -r -d %{homedir} tomcat 2>/dev/null || :
 
-%post
-# install but don't activate
-%systemd_post %{name}.service
-
-%post systemv
-# install but don't activate
+%post 
 /sbin/chkconfig --add %{name}
 
 %post jsp-%{jspspec}-api
@@ -525,17 +486,13 @@ EOF
 %{_sbindir}/update-alternatives --install %{_javadir}/elspec.jar elspec \
    %{_javadir}/%{name}-el-%{elspec}-api.jar 20300
 
-%preun systemv
-    %{_initrddir}/%{name} stop >/dev/null 2>&1
-    /sbin/chkconfig --del %{name}
 
 %preun
 # clean tempdir and workdir on removal or upgrade
-%{__rm} -rf %{workdir}/* %{tempdir}/*
-%systemd_preun %{name}.service
+%{_initrddir}/%{name} stop >/dev/null 2>&1
+/sbin/chkconfig --del %{name}
 
-%postun
-%systemd_postun_with_restart %{name}.service 
+%{__rm} -rf %{workdir}/* %{tempdir}/*
 
 %postun jsp-%{jspspec}-api
 if [ "$1" = "0" ]; then
@@ -556,26 +513,22 @@ if [ "$1" = "0" ]; then
 fi
 
 %triggerun -- tomcat < 0:7.0.22-2
-/usr/bin/systemd-sysv-convert -- save tomcat > /dev/null 2>&1 || :
-# Run these becasue the SysV package being removed won't do them
 /sbin/chkconfig --del tomcat > /dev/null 2>&1 || :
-/bin/systemctl try-restart tomcat.service > /dev/null 2>&1 || :
 
 %files
 %defattr(0664,root,tomcat,0755)
 %doc {LICENSE,NOTICE,RELEASE*}
 %attr(0755,root,root) %{_bindir}/%{name}-digest
 %attr(0755,root,root) %{_bindir}/%{name}-tool-wrapper
+%attr(0755,root,root) %{_sbindir}/d%{name}
 %attr(0755,root,root) %{_sbindir}/%{name}
-%attr(0644,root,root) %{_unitdir}/%{name}.service
-%attr(0755,root,root) %{_sbindir}/%{name}-sysd
+%attr(0755,root,root) %{_initrddir}/%{name}
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %attr(0755,root,tomcat) %dir %{basedir}
 %attr(0755,root,tomcat) %dir %{confdir}
-%defattr(0664,tomcat,root,0770)
-%attr(0770,tomcat,root) %dir %{logdir}
 %defattr(0664,root,tomcat,0770)
+%attr(0770,root,tomcat) %dir %{logdir}
 %attr(0660,tomcat,tomcat) %{logdir}/catalina.out
 %attr(0644,tomcat,tomcat) %{_localstatedir}/run/%{name}.pid
 %attr(0770,root,tomcat) %dir %{cachedir}
@@ -621,7 +574,7 @@ fi
 %{_javadir}/%{name}-jsp-%{jspspec}*.jar
 %{_javadir}/%{name}-jsp-api.jar
 %{_mavenpomdir}/JPP-%{name}-jsp-api.pom
-%{_mavendepmapfragdir}/%{name}-tomcat-jsp-api
+%{_mavendepmapfragdir}/%{name}-jsp-api
 
 %files lib
 %defattr(-,root,root,-)
@@ -634,7 +587,7 @@ fi
 %{_mavenpomdir}/JPP.%{name}-catalina.pom
 %{_mavenpomdir}/JPP.%{name}-jasper-el.pom
 %{_mavenpomdir}/JPP.%{name}-jasper.pom
-%{_mavenpomdir}/JPP.%{name}-tomcat-api.pom
+%{_mavenpomdir}/JPP.%{name}-api.pom
 %{_mavenpomdir}/JPP.%{name}-tomcat-juli.pom
 %{_mavenpomdir}/JPP.%{name}-tomcat-coyote.pom
 %{_mavenpomdir}/JPP.%{name}-tomcat-util.pom
@@ -646,7 +599,7 @@ fi
 %doc LICENSE
 %{_javadir}/%{name}-servlet-%{servletspec}*.jar
 %{_javadir}/%{name}-servlet-api.jar
-%{_mavendepmapfragdir}/%{name}-tomcat-servlet-api
+%{_mavendepmapfragdir}/%{name}-servlet-api
 %{_mavenpomdir}/JPP-%{name}-servlet-api.pom
 
 %files el-%{elspec}-api
@@ -656,7 +609,7 @@ fi
 %{_javadir}/%{name}-el-api.jar
 %{libdir}/%{name}-el-%{elspec}-api.jar
 %{_mavenpomdir}/JPP-%{name}-el-api.pom
-%{_mavendepmapfragdir}/%{name}-tomcat-el-api
+%{_mavendepmapfragdir}/%{name}-el-api
 
 
 %files webapps
@@ -665,49 +618,22 @@ fi
 %{appdir}/examples
 %{appdir}/sample
 
-%files systemv
-%defattr(755,root,root,0755)
-%{_sbindir}/d%{name}
-%{_initrddir}/%{name}
-
 %files jsvc
 %defattr(755,root,root,0755)
 %{_sbindir}/%{name}-jsvc
-%{_sbindir}/%{name}-jsvc-sysd
-%attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
-* Sun Nov 03 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.47-1
-- Updated to 7.0.47
-
-* Thu Jul 11 2013 Dmitry Tikhonov <squall.sama@gmail.com> 0:7.0.42-1
-- Updated to 7.0.42
-
-* Sat May 11 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.40-1
-- Updated to 7.0.40
-- Resolves: rhbz 956569 added missing commons-pool link
-
-* Mon Mar  4 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:7.0.37-2
-- Add depmaps for org.eclipse.jetty.orbit
-- Resolves: rhbz#917626
-
-* Wed Feb 20 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.39-1
-- Updated to 7.0.39
-
-* Wed Feb 20 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.37-1
-- Updated to 7.0.37
-
-* Mon Feb 4 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.35-1
-- Updated to 7.0.35
-- systemd SuccessExitStatus=143 for proper stop exit code processing
-
-* Mon Dec 24 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.34-1
-- Updated to 7.0.34
-- ecj >= 4.2.1 now required
-- Resolves: rhbz 889395 concat classpath correctly; chdir to $CATALINA_HOME
-
-* Fri Dec 7 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.33-2
-- Resolves: rhbz 883806 refix logdir ownership 
+* Thu Feb 6 2014 Vlad Slepukhin <slp.vld@gmail.com> 0.7.0.33-2
+- Rebuilded for CentOS 6.x compatibility
+- Removed systemd for compatibility 
+- As no systemd used, systemv moved back to tomcat package
+- Build now requires ant-trax for compatibility (XSLT and JavaDoc)
+- Build now requires redhat-lsb for LSB libraries on CentOS
+- Removed geronimo-jaxrpc as no package found in CentOS
+- Renamed apache-* packages to jakarta-* ones for CentOS
+- %add_maven_depmap replaced with %add_to_maven_depmap as no such Maven script exists in CentOS maven packages
+- Refactored and cleaned, removing unused code 
+- Removed unused files needed for systemd
 
 * Sun Dec 2 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.33-1
 - Updated to 7.0.33
