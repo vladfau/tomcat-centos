@@ -70,12 +70,12 @@ Source7:       %{name}-%{major_version}.%{minor_version}-tool-wrapper.script
 Source8:       servlet-api-OSGi-MANIFEST.MF
 Source9:       jsp-api-OSGi-MANIFEST.MF
 Source10:      %{name}-%{major_version}.%{minor_version}-log4j.properties
-Source12:      el-api-OSGi-MANIFEST.MF
-Source13:      jasper-el-OSGi-MANIFEST.MF
-Source14:      jasper-OSGi-MANIFEST.MF
-Source15:      tomcat-api-OSGi-MANIFEST.MF
-Source16:      tomcat-juli-OSGi-MANIFEST.MF
-Source17:      %{name}-%{major_version}.%{minor_version}-jsvc.wrapper
+Source11:      el-api-OSGi-MANIFEST.MF
+Source12:      jasper-el-OSGi-MANIFEST.MF
+Source13:      jasper-OSGi-MANIFEST.MF
+Source14:      tomcat-api-OSGi-MANIFEST.MF
+Source15:      tomcat-juli-OSGi-MANIFEST.MF
+Source16:      %{name}-%{major_version}.%{minor_version}-jsvc.wrapper
 
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
@@ -280,19 +280,19 @@ zip -u output/build/lib/servlet-api.jar META-INF/MANIFEST.MF
 cp -p %{SOURCE9} META-INF/MANIFEST.MF
 touch META-INF/MANIFEST.MF
 zip -u output/build/lib/jsp-api.jar META-INF/MANIFEST.MF
-cp -p %{SOURCE12} META-INF/MANIFEST.MF
+cp -p %{SOURCE11} META-INF/MANIFEST.MF
 touch META-INF/MANIFEST.MF
 zip -u output/build/lib/el-api.jar META-INF/MANIFEST.MF
-cp -p %{SOURCE13} META-INF/MANIFEST.MF
+cp -p %{SOURCE12} META-INF/MANIFEST.MF
 touch META-INF/MANIFEST.MF
 zip -u output/build/lib/jasper-el.jar META-INF/MANIFEST.MF
-cp -p %{SOURCE14} META-INF/MANIFEST.MF
+cp -p %{SOURCE13} META-INF/MANIFEST.MF
 touch META-INF/MANIFEST.MF
 zip -u output/build/lib/jasper.jar META-INF/MANIFEST.MF
-cp -p %{SOURCE15} META-INF/MANIFEST.MF
+cp -p %{SOURCE14} META-INF/MANIFEST.MF
 touch META-INF/MANIFEST.MF
 zip -u output/build/lib/tomcat-api.jar META-INF/MANIFEST.MF
-cp -p %{SOURCE16} META-INF/MANIFEST.MF
+cp -p %{SOURCE15} META-INF/MANIFEST.MF
 touch META-INF/MANIFEST.MF
 zip -u output/build/bin/tomcat-juli.jar META-INF/MANIFEST.MF
 
@@ -342,7 +342,7 @@ popd
     ${RPM_BUILD_ROOT}%{_initrddir}/%{name}
 %{__install} -m 0644 %{SOURCE4} \
     ${RPM_BUILD_ROOT}%{_sbindir}/%{name}
-%{__install} -m 0644 %{SOURCE17} \
+%{__install} -m 0644 %{SOURCE16} \
     ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-jsvc
 %{__ln_s} %{name} ${RPM_BUILD_ROOT}%{_sbindir}/d%{name}
 %{__sed} -e "s|\@\@\@TCLOG\@\@\@|%{logdir}|g" %{SOURCE5} \
