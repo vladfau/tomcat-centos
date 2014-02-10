@@ -512,7 +512,6 @@ if [ "$1" = "0" ]; then
         %{_javadir}/%{name}-el-%{elspec}-api.jar
 fi
 
-%triggerun -- tomcat < 0:7.0.22-2
 /sbin/chkconfig --del tomcat > /dev/null 2>&1 || :
 
 %files
@@ -528,7 +527,7 @@ fi
 %attr(0755,root,tomcat) %dir %{basedir}
 %attr(0755,root,tomcat) %dir %{confdir}
 %defattr(0664,root,tomcat,0770)
-%attr(0770,root,tomcat) %dir %{logdir}
+%attr(0644,root,tomcat) %dir %{logdir}
 %attr(0660,tomcat,tomcat) %{logdir}/catalina.out
 %attr(0644,tomcat,tomcat) %{_localstatedir}/run/%{name}.pid
 %attr(0770,root,tomcat) %dir %{cachedir}
@@ -624,16 +623,49 @@ fi
 
 %changelog
 * Thu Feb 6 2014 Vlad Slepukhin <slp.vld@gmail.com> 0.7.0.33-2
-- Rebuilded for CentOS 6.x compatibility
+- Rebuilded for EL6 compatibility
 - Removed systemd for compatibility 
 - As no systemd used, systemv moved back to tomcat package
 - Build now requires ant-trax for compatibility (XSLT and JavaDoc)
 - Build now requires redhat-lsb for LSB libraries on CentOS
-- Removed geronimo-jaxrpc as no package found in CentOS
-- Renamed apache-* packages to jakarta-* ones for CentOS
-- %add_maven_depmap replaced with %add_to_maven_depmap as no such Maven script exists in CentOS maven packages
+- Removed geronimo-jaxrpc as no package found in EL6
+- Renamed apache-* packages to jakarta-* ones for EL6
+- %add_maven_depmap replaced with %add_to_maven_depmap as no such Maven script exists in EL6 maven packages
 - Refactored and cleaned, removing unused code 
 - Removed unused files needed for systemd
+- Corrected access attributes and rights management for safety purposes
+
+* Sun Nov 03 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.47-1
+- Updated to 7.0.47
+
+* Thu Jul 11 2013 Dmitry Tikhonov <squall.sama@gmail.com> 0:7.0.42-1
+- Updated to 7.0.42
+
+* Sat May 11 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.40-1
+- Updated to 7.0.40
+- Resolves: rhbz 956569 added missing commons-pool link
+
+* Mon Mar  4 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:7.0.37-2
+- Add depmaps for org.eclipse.jetty.orbit
+- Resolves: rhbz#917626
+
+* Wed Feb 20 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.39-1
+- Updated to 7.0.39
+
+* Wed Feb 20 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.37-1
+- Updated to 7.0.37
+
+* Mon Feb 4 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.35-1
+- Updated to 7.0.35
+- systemd SuccessExitStatus=143 for proper stop exit code processing
+
+* Mon Dec 24 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.34-1
+- Updated to 7.0.34
+- ecj >= 4.2.1 now required
+- Resolves: rhbz 889395 concat classpath correctly; chdir to $CATALINA_HOME
+
+* Fri Dec 7 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.33-2
+- Resolves: rhbz 883806 refix logdir ownership 
 
 * Sun Dec 2 2012 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.33-1
 - Updated to 7.0.33
