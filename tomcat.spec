@@ -491,7 +491,6 @@ EOF
 # clean tempdir and workdir on removal or upgrade
 %{_initrddir}/%{name} stop >/dev/null 2>&1
 /sbin/chkconfig --del %{name}
-
 %{__rm} -rf %{workdir}/* %{tempdir}/*
 
 %postun jsp-%{jspspec}-api
@@ -512,7 +511,6 @@ if [ "$1" = "0" ]; then
         %{_javadir}/%{name}-el-%{elspec}-api.jar
 fi
 
-/sbin/chkconfig --del tomcat > /dev/null 2>&1 || :
 
 %files
 %defattr(0664,root,tomcat,0755)
