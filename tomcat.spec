@@ -620,7 +620,7 @@ fi
 %{_sbindir}/%{name}-jsvc
 
 %changelog
-* Thu Feb 6 2014 Vlad Slepukhin <slp.vld@gmail.com> 0.7.0.33-2
+* Thu Feb 12 2014 Vlad Slepukhin <slp.vld@gmail.com> 0.7.0.33-1
 - Rebuilded for EL6 compatibility
 - Removed systemd for compatibility 
 - As no systemd used, systemv moved back to tomcat package
