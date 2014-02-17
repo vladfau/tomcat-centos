@@ -22,16 +22,11 @@ if [ -r "/etc/sysconfig/${NAME}" ]; then
 fi
 
 set_javacmd
-cd ${CATALINA_HOME}
 # CLASSPATH munging
-if [ ! -z "$CLASSPATH" ] ; then
-  CLASSPATH="$CLASSPATH":
-fi
-
 if [ -n "$JSSE_HOME" ]; then
-  CLASSPATH="${CLASSPATH}$(build-classpath jcert jnet jsse 2>/dev/null):"
+  CLASSPATH="${CLASSPATH}:$(build-classpath jcert jnet jsse 2>/dev/null)"
 fi
-CLASSPATH="${CLASSPATH}${CATALINA_HOME}/bin/bootstrap.jar"
+CLASSPATH="${CLASSPATH}:${CATALINA_HOME}/bin/bootstrap.jar"
 CLASSPATH="${CLASSPATH}:${CATALINA_HOME}/bin/tomcat-juli.jar"
 CLASSPATH="${CLASSPATH}:$(build-classpath commons-daemon 2>/dev/null)"
 
