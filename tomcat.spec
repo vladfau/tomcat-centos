@@ -620,7 +620,7 @@ fi
 %{_sbindir}/%{name}-jsvc
 
 %changelog
-* Thu Feb 12 2014 Vlad Slepukhin <slp.vld@gmail.com> 0:7.0.33-1
+* Thu Feb 20 2014 Vlad Slepukhin <slp.vld@gmail.com> 0:7.0.33-1
 - Rebuilded for EL6 compatibility
 - Removed systemd for compatibility 
 - As no systemd used, systemv moved back to tomcat package
@@ -642,7 +642,6 @@ fi
 * Sat May 11 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.40-1
 - Updated to 7.0.40
 - Resolves: rhbz 956569 added missing commons-pool link
-- Remove ant-nodeps BR
 
 * Mon Mar  4 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:7.0.37-2
 - Add depmaps for org.eclipse.jetty.orbit
