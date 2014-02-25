@@ -53,7 +53,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -81,6 +81,8 @@ Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.p
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
 
 BuildArch:     noarch
+
+ExclusiveArch: x86_64 i686
 
 BuildRequires: ant
 BuildRequires: ant-nodeps
@@ -620,6 +622,9 @@ fi
 %{_sbindir}/%{name}-jsvc
 
 %changelog
+* Mon Feb 24 2014 Vlad Slepukhin <slp.vld@gmail.com> 0:7.0.33-2
+- Restrctied to x86_64 and i686 platforms as now requires java 1.6 or later for building and running
+
 * Thu Feb 20 2014 Vlad Slepukhin <slp.vld@gmail.com> 0:7.0.33-1
 - Rebuilded for EL6 compatibility
 - Removed systemd for compatibility 
