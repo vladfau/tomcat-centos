@@ -53,7 +53,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       3%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -82,7 +82,7 @@ Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.pat
 
 BuildArch:     noarch
 
-ExclusiveArch: x86_64 i686
+ExcludeArch: ppc64
 
 BuildRequires: ant
 BuildRequires: ant-nodeps
@@ -622,6 +622,9 @@ fi
 %{_sbindir}/%{name}-jsvc
 
 %changelog
+* Wed Feb 26 2014 Vlad Slepukhin <slp.vld@gmail.com> 0:7.0.33-3
+- Changed ExclusiveArch to ExcludeArch due to bug appearing during build with this parameter 
+
 * Mon Feb 24 2014 Vlad Slepukhin <slp.vld@gmail.com> 0:7.0.33-2
 - Restrctied to x86_64 and i686 platforms as now requires java 1.6 or later for building and running
 
