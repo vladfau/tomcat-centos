@@ -53,7 +53,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       3%{?dist}
+Release:       4%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -527,7 +527,7 @@ fi
 %attr(0755,root,tomcat) %dir %{basedir}
 %attr(0755,root,tomcat) %dir %{confdir}
 %defattr(0664,root,tomcat,0770)
-%attr(0644,root,tomcat) %dir %{logdir}
+%attr(0770,root,tomcat) %dir %{logdir}
 %attr(0660,tomcat,tomcat) %{logdir}/catalina.out
 %attr(0644,tomcat,tomcat) %{_localstatedir}/run/%{name}.pid
 %attr(0770,root,tomcat) %dir %{cachedir}
@@ -622,6 +622,10 @@ fi
 %{_sbindir}/%{name}-jsvc
 
 %changelog
+* Tue Apr 29 2014 Vlad Slepukhin <slp.vld@gmail.com> 0:7.0.33-4
+- Fixed bug not allowing Tomcat to start properly connected with access privleges to the logging directory
+- Removed residual systemd configuration from the wrapper
+
 * Wed Feb 26 2014 Vlad Slepukhin <slp.vld@gmail.com> 0:7.0.33-3
 - Changed ExclusiveArch to ExcludeArch due to bug appearing during build with this parameter 
 
