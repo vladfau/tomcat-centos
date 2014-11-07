@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 33
+%global micro_version 56
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -53,13 +53,13 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       4%{?dist}
+Release:       1%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
 License:       ASL 2.0
 URL:           http://tomcat.apache.org/
-Source0:       http://archive.apache.org/dist/tomcat/tomcat-%{major_version}/v%{version}/src/%{packdname}.tar.gz
+Source0:       http://mirrors.gigenet.com/apache/tomcat/tomcat-%{major_version}/v%{version}/src/%{packdname}.tar.gz
 Source1:       %{name}-%{major_version}.%{minor_version}.conf
 Source2:       %{name}-%{major_version}.%{minor_version}.init
 Source3:       %{name}-%{major_version}.%{minor_version}.sysconfig
@@ -79,6 +79,8 @@ Source16:      %{name}-%{major_version}.%{minor_version}-jsvc.wrapper
 
 Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
+Patch2:        %{name}-%{major_version}.%{minor_version}-JDTCompiler.patch
+Patch3:        %{name}-%{major_version}.%{minor_version}-build.patch
 
 BuildArch:     noarch
 
@@ -94,7 +96,7 @@ BuildRequires: jakarta-commons-daemon
 BuildRequires: jakarta-commons-dbcp
 BuildRequires: jakarta-commons-pool
 BuildRequires: jakarta-taglibs-standard
-BuildRequires: java-devel >= 1:1.6.0
+BuildRequires: java-1.7.0-openjdk-devel
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
 BuildRequires: log4j
@@ -226,6 +228,8 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 
 %patch0 -p0
 %patch1 -p0
+%patch2 -p0
+%patch3 -p0
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
 
@@ -257,6 +261,7 @@ export OPT_JAR_LIST="ant/ant-trax xalan-j2-serializer"
       -Dno.build.dbcp=true \
       -Dversion="%{version}" \
       -Dversion.build="%{micro_version}" \
+      -Djava.7.home="%{java_home}" \
       deploy dist-prepare dist-source javadoc
 
     # remove some jars that we'll replace with symlinks later
@@ -622,6 +627,13 @@ fi
 %{_sbindir}/%{name}-jsvc
 
 %changelog
+* Fri Nov 07 2014 Vlad Slepukhin <slp.vld@gmail.com> 0:7.0.56-1
+- Change lowest java-devel requirement to OpenJDK 7 to allow building 7.0.56 on EL6
+- Combined patched by Stefan Hecker
+
+* Wed Oct 28 2014 Stefan Hecker <stefan.hecker@god.de> 0:7.0.56-1
+- Version bump to 7.0.56
+
 * Tue Apr 29 2014 Vlad Slepukhin <slp.vld@gmail.com> 0:7.0.33-4
 - Fixed bug not allowing Tomcat to start properly connected with access privleges to the logging directory
 - Removed residual systemd configuration from the wrapper
