@@ -96,7 +96,7 @@ BuildRequires: jakarta-commons-daemon
 BuildRequires: jakarta-commons-dbcp
 BuildRequires: jakarta-commons-pool
 BuildRequires: jakarta-taglibs-standard
-BuildRequires: java-1.7.0-openjdk-devel
+BuildRequires: java7-devel
 BuildRequires: jpackage-utils >= 0:1.7.0
 BuildRequires: junit
 BuildRequires: log4j
@@ -627,9 +627,10 @@ fi
 %{_sbindir}/%{name}-jsvc
 
 %changelog
-* Fri Nov 07 2014 Vlad Slepukhin <slp.vld@gmail.com> 0:7.0.56-1
+* Fri Nov 13 2014 Vlad Slepukhin <slp.vld@gmail.com> 0:7.0.56-1
 - Change lowest java-devel requirement to OpenJDK 7 to allow building 7.0.56 on EL6
-- Combined patched by Stefan Hecker
+- Update link to actual 7.0.56 instead of using archive site
+- Combined patches by Stefan Hecker
 
 * Wed Oct 28 2014 Stefan Hecker <stefan.hecker@god.de> 0:7.0.56-1
 - Version bump to 7.0.56
